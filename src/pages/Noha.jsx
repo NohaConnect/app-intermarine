@@ -6,7 +6,7 @@ import {
   FRENTES_NOHA_CORES, FRENTES_IM_CORES, DONOS_NOHA,
   splitDonos, isOverdue, daysLeft, formatDate, formatDateTime
 } from '../lib/constants'
-import { Plus, X, Calendar, User, Target, MessageSquare, Trash2, AlertTriangle, Link2 } from 'lucide-react'
+import { Plus, X, Calendar, User, Target, MessageSquare, Trash2, AlertTriangle, Link2, GripVertical, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function NohaPage({ view }) {
   const { tarefas, loading, updateTarefa, addTarefa, deleteTarefa, addComentario } = useTarefas()
@@ -19,6 +19,7 @@ export default function NohaPage({ view }) {
   const [modalId, setModalId] = useState(null)
   const [newComment, setNewComment] = useState('')
   const [showNew, setShowNew] = useState(false)
+  const [draggedId, setDraggedId] = useState(null)
 
   const frenteNames = frentesNoha.length > 0 ? frentesNoha.map(f => f.nome) : Object.keys(FRENTES_NOHA_CORES)
   const frenteCores = frentesNoha.length > 0
@@ -50,7 +51,9 @@ export default function NohaPage({ view }) {
     NOHA_STATUS.forEach(s => byStatus[s] = 0)
     filtered.forEach(t => byStatus[t.status] = (byStatus[t.status] || 0) + 1)
     const done = byStatus['Concluído'] || 0
-    return { total, byStatus, done, pct: total > 0 ? Math.round(done / total * 100) : 0 }
+    const overdue = filtered.filter(t => t.status !== 'Concluído' && isOverdue(t.deadline)).length
+    const inProgress = byStatus['Em Progresso'] || 0
+    return { total, byStatus, done, pct: total > 0 ? Math.round(done / total * 100) : 0, overdue, inProgress }
   }, [filtered])
 
   const handleUpdate = async (id, fields) => {
@@ -74,9 +77,26 @@ export default function NohaPage({ view }) {
     }
   }
 
+  const handleDragStart = (e, id) => {
+    setDraggedId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = async (e, targetStatus) => {
+    e.preventDefault()
+    if (!draggedId) return
+    await handleUpdate(draggedId, { status: targetStatus })
+    setDraggedId(null)
+  }
+
   const Select = ({ value, onChange, options }) => (
     <select value={value} onChange={e => onChange(e.target.value)}
-            className="text-[11px] font-semibold rounded-lg px-2.5 py-1.5 outline-none cursor-pointer transition-all"
+            className="text-sm font-semibold rounded-lg px-2.5 py-1.5 outline-none cursor-pointer transition-all"
             style={{ background: 'rgba(0,0,0,0.04)', color: '#475569', border: '1px solid rgba(0,0,0,0.06)' }}>
       {options.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -85,14 +105,14 @@ export default function NohaPage({ view }) {
   const PriorityBadge = ({ p }) => {
     const color = NOHA_PRIORIDADE_CORES[p] || '#94a3b8'
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md"
+      <span className="text-xs font-bold px-2 py-0.5 rounded-md"
             style={{ background: color + '15', color }}>
         {p}
       </span>
     )
   }
 
-  const ProgressBar = ({ value, color = '#2563eb' }) => (
+  const ProgressBar = ({ value, color = '#6366f1' }) => (
     <div className="w-full h-1.5 rounded-full bg-black/[0.06] overflow-hidden">
       <div className="h-full rounded-full transition-all duration-500"
            style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}, ${color}aa)` }} />
@@ -104,7 +124,7 @@ export default function NohaPage({ view }) {
     if (!objetivo) return null
     const cor = frentesIMCores[objetivo] || '#4da8da'
     return (
-      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+      <span className="inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-md"
             style={{ background: cor + '12', color: cor, border: `1px solid ${cor}25` }}>
         <Link2 size={8} /> {objetivo}
       </span>
@@ -114,26 +134,57 @@ export default function NohaPage({ view }) {
   // Dashboard
   const DashboardView = () => (
     <div className={`grid gap-3 ${isLandscape ? 'grid-cols-2' : isMobile ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
-      <div className="glass-light p-4 col-span-full">
+      <div className="glass-light p-4 col-span-full border-l-4" style={{ borderLeftColor: '#a78bfa' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progresso Geral</div>
-            <div className="text-2xl font-black text-gray-800">{stats.pct}%</div>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Progresso Geral</div>
+            <div className="text-3xl font-black text-gray-800">{stats.pct}%</div>
           </div>
           <div className="flex gap-4 text-right">
-            <div><div className="text-lg font-bold text-gray-800">{stats.total}</div><div className="text-[9px] text-gray-400 uppercase">Total</div></div>
-            <div><div className="text-lg font-bold text-emerald-500">{stats.done}</div><div className="text-[9px] text-gray-400 uppercase">Concluídas</div></div>
+            <div><div className="text-lg font-bold text-gray-800">{stats.total}</div><div className="text-xs text-gray-400 uppercase">Total</div></div>
+            <div><div className="text-lg font-bold text-emerald-500">{stats.done}</div><div className="text-xs text-gray-400 uppercase">Concluídas</div></div>
           </div>
         </div>
-        <ProgressBar value={stats.pct} color="#10b981" />
+        <ProgressBar value={stats.pct} color="#6366f1" />
         <div className="flex gap-2 mt-3 flex-wrap">
           {NOHA_STATUS.map(s => (
-            <div key={s} className="flex items-center gap-1.5 text-[10px]">
+            <div key={s} className="flex items-center gap-1.5 text-xs">
               <div className="w-2 h-2 rounded-full" style={{ background: NOHA_STATUS_COLORS[s]?.c }} />
               <span className="text-gray-500">{s}</span>
               <span className="font-bold text-gray-700">{stats.byStatus[s] || 0}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="col-span-full grid grid-cols-3 gap-3">
+        <div className="glass-light p-4 flex items-center gap-3 border-l-4" style={{ borderLeftColor: '#f59e0b' }}>
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+            <Clock size={20} className="text-amber-600" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-gray-800">{stats.overdue}</div>
+            <div className="text-xs text-gray-500">Atrasadas</div>
+          </div>
+        </div>
+        <div className="glass-light p-4 flex items-center gap-3 border-l-4" style={{ borderLeftColor: '#6366f1' }}>
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+            <AlertCircle size={20} className="text-indigo-600" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-gray-800">{stats.inProgress}</div>
+            <div className="text-xs text-gray-500">Em Progresso</div>
+          </div>
+        </div>
+        <div className="glass-light p-4 flex items-center gap-3 border-l-4" style={{ borderLeftColor: '#10b981' }}>
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <CheckCircle2 size={20} className="text-emerald-600" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-gray-800">{stats.done}</div>
+            <div className="text-xs text-gray-500">Concluídas</div>
+          </div>
         </div>
       </div>
 
@@ -143,19 +194,19 @@ export default function NohaPage({ view }) {
         const done = items.filter(t => t.status === 'Concluído').length
         const pct = Math.round(done / items.length * 100)
         return (
-          <div key={frente} className="glass-light p-4 card-hover">
+          <div key={frente} className="glass-light p-4 card-hover border-l-4" style={{ borderLeftColor: frenteCores[frente] || '#a78bfa' }}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full" style={{ background: frenteCores[frente] || '#2563eb' }} />
-              <span className="text-xs font-bold text-gray-800">{frente}</span>
-              <span className="ml-auto text-xs font-bold" style={{ color: frenteCores[frente] || '#2563eb' }}>{pct}%</span>
+              <div className="w-2 h-2 rounded-full" style={{ background: frenteCores[frente] || '#a78bfa' }} />
+              <span className="text-sm font-bold text-gray-800">{frente}</span>
+              <span className="ml-auto text-sm font-bold" style={{ color: frenteCores[frente] || '#a78bfa' }}>{pct}%</span>
             </div>
-            <ProgressBar value={pct} color={frenteCores[frente] || '#2563eb'} />
+            <ProgressBar value={pct} color={frenteCores[frente] || '#a78bfa'} />
             <div className="mt-3 space-y-1.5">
               {items.map(item => (
                 <div key={item.id} className="flex items-center gap-2 cursor-pointer hover:bg-black/[0.02] rounded-lg p-1.5 -mx-1.5 transition-all"
                      onClick={() => setModalId(item.id)}>
                   <div className="w-1 h-1 rounded-full" style={{ background: NOHA_STATUS_COLORS[item.status]?.c }} />
-                  <span className="text-[11px] text-gray-600 flex-1 truncate">{item.titulo}</span>
+                  <span className="text-sm text-gray-600 flex-1 truncate">{item.titulo}</span>
                   <PriorityBadge p={item.prioridade} />
                   <ObjetivoBadge objetivo={item.objetivo_intermarine} />
                 </div>
@@ -173,28 +224,35 @@ export default function NohaPage({ view }) {
       {NOHA_STATUS.map(status => {
         const items = filtered.filter(t => t.status === status)
         return (
-          <div key={status} className="min-w-[260px] max-w-[300px] flex-shrink-0">
+          <div key={status} className="min-w-[280px] max-w-[320px] flex-shrink-0">
             <div className="flex items-center gap-2 mb-2 px-1">
               <div className="w-2 h-2 rounded-full" style={{ background: NOHA_STATUS_COLORS[status]?.c }} />
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{status}</span>
-              <span className="text-[10px] font-bold ml-auto px-1.5 py-0.5 rounded bg-black/[0.04] text-gray-500">{items.length}</span>
+              <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">{status}</span>
+              <span className="text-xs font-bold ml-auto px-1.5 py-0.5 rounded bg-black/[0.04] text-gray-500">{items.length}</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, status)}>
               {items.map(item => (
-                <div key={item.id} className="glass-light p-3 card-hover cursor-pointer"
+                <div key={item.id}
+                     draggable
+                     onDragStart={(e) => handleDragStart(e, item.id)}
+                     className={`glass-light p-3 card-hover cursor-move border-l-4 transition-all ${draggedId === item.id ? 'opacity-50 scale-95' : ''}`}
+                     style={{ borderLeftColor: frenteCores[item.frente] || '#a78bfa' }}
                      onClick={() => setModalId(item.id)}>
-                  <div className="text-xs font-bold text-gray-800 mb-1.5">{item.titulo}</div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <GripVertical size={14} className="text-gray-300 cursor-grab active:cursor-grabbing flex-shrink-0" />
+                    <span className="text-sm font-bold text-gray-800 flex-1 truncate">{item.titulo}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2 ml-6">
                     <PriorityBadge p={item.prioridade} />
-                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: (frenteCores[item.frente] || '#2563eb') + '12', color: frenteCores[item.frente] || '#2563eb' }}>
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: (frenteCores[item.frente] || '#a78bfa') + '12', color: frenteCores[item.frente] || '#a78bfa' }}>
                       {item.frente}
                     </span>
                     <ObjetivoBadge objetivo={item.objetivo_intermarine} />
                   </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[10px] text-gray-400 flex items-center gap-1"><User size={10} /> {item.dono}</span>
+                  <div className="flex items-center justify-between mt-2 ml-6">
+                    <span className="text-xs text-gray-400 flex items-center gap-1"><User size={10} /> {item.dono}</span>
                     {item.deadline && (
-                      <span className={`text-[10px] flex items-center gap-1 ${isOverdue(item.deadline) && item.status !== 'Concluído' ? 'text-red-500' : 'text-gray-400'}`}>
+                      <span className={`text-xs flex items-center gap-1 ${isOverdue(item.deadline) && item.status !== 'Concluído' ? 'text-red-500' : 'text-gray-400'}`}>
                         <Calendar size={10} /> {formatDate(item.deadline)}
                       </span>
                     )}
@@ -215,7 +273,7 @@ export default function NohaPage({ view }) {
         <thead>
           <tr style={{ background: 'rgba(0,0,0,0.02)' }}>
             {['Tarefa', 'Frente', 'Objetivo IM', 'Prioridade', 'Dono', 'Status'].map(h => (
-              <th key={h} className="px-3 py-2.5 text-left text-[9px] font-bold text-gray-400 tracking-widest uppercase border-b border-black/[0.06]">
+              <th key={h} className="px-3 py-2.5 text-left text-xs font-bold text-gray-400 tracking-widest uppercase border-b border-black/[0.06]">
                 {h}
               </th>
             ))}
@@ -227,18 +285,18 @@ export default function NohaPage({ view }) {
                 style={{ background: i % 2 === 0 ? 'rgba(0,0,0,0.01)' : 'transparent' }}
                 onClick={() => setModalId(item.id)}>
               <td className="px-3 py-2.5 border-b border-black/[0.04]">
-                <div className="text-[11px] font-semibold text-gray-800">{item.titulo}</div>
+                <div className="text-sm font-semibold text-gray-800">{item.titulo}</div>
               </td>
               <td className="px-3 py-2.5 border-b border-black/[0.04]">
-                <span className="text-[10px] text-gray-600">{item.frente}</span>
+                <span className="text-xs text-gray-600">{item.frente}</span>
               </td>
               <td className="px-3 py-2.5 border-b border-black/[0.04]">
                 <ObjetivoBadge objetivo={item.objetivo_intermarine} />
               </td>
               <td className="px-3 py-2.5 border-b border-black/[0.04]"><PriorityBadge p={item.prioridade} /></td>
-              <td className="px-3 py-2.5 border-b border-black/[0.04] text-[10px] text-gray-600">{item.dono}</td>
+              <td className="px-3 py-2.5 border-b border-black/[0.04] text-xs text-gray-600">{item.dono}</td>
               <td className="px-3 py-2.5 border-b border-black/[0.04]">
-                <span className="text-[10px] font-bold" style={{ color: NOHA_STATUS_COLORS[item.status]?.c }}>{item.status}</span>
+                <span className="text-xs font-bold" style={{ color: NOHA_STATUS_COLORS[item.status]?.c }}>{item.status}</span>
               </td>
             </tr>
           ))}
@@ -262,46 +320,46 @@ export default function NohaPage({ view }) {
         <div className="glass-light w-full max-w-lg p-5 max-h-[85vh] overflow-y-auto animate-scale-in"
              onClick={e => e.stopPropagation()}>
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-base font-black text-gray-800 pr-4">{item.titulo}</h2>
+            <h2 className="text-lg font-black text-gray-800 pr-4">{item.titulo}</h2>
             <button onClick={() => { setModalId(null); setNewComment('') }}
                     className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
           </div>
 
-          {item.descricao && <p className="text-xs text-gray-500 mb-4 leading-relaxed">{item.descricao}</p>}
+          {item.descricao && <p className="text-sm text-gray-500 mb-4 leading-relaxed">{item.descricao}</p>}
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div>
               <label className="label text-gray-400">Status</label>
-              <select value={item.status} onChange={e => handleUpdate(item.id, { status: e.target.value })} className="input-light text-xs">
+              <select value={item.status} onChange={e => handleUpdate(item.id, { status: e.target.value })} className="input-light text-sm">
                 {NOHA_STATUS.map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <label className="label text-gray-400">Prioridade</label>
-              <select value={item.prioridade} onChange={e => handleUpdate(item.id, { prioridade: e.target.value })} className="input-light text-xs">
+              <select value={item.prioridade} onChange={e => handleUpdate(item.id, { prioridade: e.target.value })} className="input-light text-sm">
                 {['Baixa', 'Média', 'Alta', 'Urgente'].map(p => <option key={p}>{p}</option>)}
               </select>
             </div>
             <div>
               <label className="label text-gray-400">Frente Noha</label>
-              <select value={item.frente} onChange={e => handleUpdate(item.id, { frente: e.target.value })} className="input-light text-xs">
+              <select value={item.frente} onChange={e => handleUpdate(item.id, { frente: e.target.value })} className="input-light text-sm">
                 {frenteNames.map(f => <option key={f}>{f}</option>)}
               </select>
             </div>
             <div>
               <label className="label text-gray-400">Dono</label>
-              <input value={item.dono} onChange={e => handleUpdate(item.id, { dono: e.target.value })} className="input-light text-xs" />
+              <input value={item.dono} onChange={e => handleUpdate(item.id, { dono: e.target.value })} className="input-light text-sm" />
             </div>
             <div>
               <label className="label text-gray-400">Prazo</label>
-              <input type="date" value={item.deadline || ''} onChange={e => handleUpdate(item.id, { deadline: e.target.value || null })} className="input-light text-xs" />
+              <input type="date" value={item.deadline || ''} onChange={e => handleUpdate(item.id, { deadline: e.target.value || null })} className="input-light text-sm" />
             </div>
             <div>
               <label className="label text-gray-400">Progresso</label>
               <div className="flex items-center gap-2">
                 <input type="range" min="0" max="100" step="5" value={item.progresso || 0}
                        onChange={e => handleUpdate(item.id, { progresso: parseInt(e.target.value) })} className="flex-1" />
-                <span className="text-xs font-bold text-blue-600 w-8 text-right">{item.progresso || 0}%</span>
+                <span className="text-sm font-bold text-indigo-600 w-8 text-right">{item.progresso || 0}%</span>
               </div>
             </div>
 
@@ -312,13 +370,13 @@ export default function NohaPage({ view }) {
               </label>
               <select value={item.objetivo_intermarine || ''}
                       onChange={e => handleUpdate(item.id, { objetivo_intermarine: e.target.value || null })}
-                      className="input-light text-xs">
+                      className="input-light text-sm">
                 <option value="">Nenhum (sem vínculo)</option>
                 {frentesIMNames.map(f => (
                   <option key={f} value={f}>{f}</option>
                 ))}
               </select>
-              <p className="text-[9px] text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 Conecta esta tarefa a uma frente estratégica do Plano Intermarine
               </p>
             </div>
@@ -326,33 +384,33 @@ export default function NohaPage({ view }) {
 
           {/* Comments */}
           <div className="border-t border-black/[0.06] pt-3">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
               <MessageSquare size={10} /> Comentários ({comments.length})
             </div>
             <div className="space-y-2 max-h-40 overflow-y-auto mb-3">
               {comments.map(c => (
-                <div key={c.id} className="text-[11px] p-2 rounded-lg" style={{ background: c.auto ? 'rgba(59,130,246,0.06)' : 'rgba(0,0,0,0.02)' }}>
+                <div key={c.id} className="text-sm p-2 rounded-lg" style={{ background: c.auto ? 'rgba(99,102,241,0.06)' : 'rgba(0,0,0,0.02)' }}>
                   <div className="text-gray-700">{c.texto}</div>
-                  <div className="text-[9px] text-gray-400 mt-0.5">
+                  <div className="text-xs text-gray-400 mt-0.5">
                     {c.autor && `${c.autor} · `}{new Date(c.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               ))}
-              {comments.length === 0 && <div className="text-[11px] text-gray-400">Nenhum comentário.</div>}
+              {comments.length === 0 && <div className="text-sm text-gray-400">Nenhum comentário.</div>}
             </div>
             <div className="flex gap-2">
               <input value={newComment} onChange={e => setNewComment(e.target.value)}
                      onKeyDown={e => e.key === 'Enter' && handleAddComment(item.id)}
-                     placeholder="Adicionar comentário..." className="input-light text-xs flex-1" />
+                     placeholder="Adicionar comentário..." className="input-light text-sm flex-1" />
               <button onClick={() => handleAddComment(item.id)}
-                      className="px-3 py-2 rounded-xl bg-blue-500/10 text-blue-600 text-xs font-bold hover:bg-blue-500/20 transition-all">
+                      className="px-3 py-2 rounded-xl bg-indigo-500/10 text-indigo-600 text-sm font-bold hover:bg-indigo-500/20 transition-all">
                 Enviar
               </button>
             </div>
           </div>
 
           <button onClick={() => handleDelete(item.id)}
-                  className="mt-4 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-red-400 text-[11px] hover:bg-red-500/10 transition-all">
+                  className="mt-4 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-red-400 text-xs hover:bg-red-500/10 transition-all">
             <Trash2 size={12} /> Excluir tarefa
           </button>
         </div>
@@ -378,7 +436,7 @@ export default function NohaPage({ view }) {
            onClick={() => setShowNew(false)}>
         <div className="glass-light w-full max-w-md p-5 animate-scale-in" onClick={e => e.stopPropagation()}>
           <div className="flex justify-between mb-4">
-            <h2 className="text-sm font-bold text-gray-800">Nova Tarefa</h2>
+            <h2 className="text-lg font-bold text-gray-800">Nova Tarefa</h2>
             <button onClick={() => setShowNew(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
           </div>
           <div className="space-y-3">
@@ -415,7 +473,7 @@ export default function NohaPage({ view }) {
             </div>
 
             <button onClick={handleCreate}
-                    className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 active:scale-95 transition-all">
+                    className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 active:scale-95 transition-all">
               Criar Tarefa
             </button>
           </div>
@@ -427,7 +485,7 @@ export default function NohaPage({ view }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     )
   }
@@ -441,17 +499,17 @@ export default function NohaPage({ view }) {
 
       {/* Header */}
       <div className={`${pad} border-b border-black/[0.04]`}
-           style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px) saturate(180%)' }}>
+           style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(238,242,255,0.7) 100%)', backdropFilter: 'blur(20px) saturate(180%)' }}>
         <div className="flex items-center gap-3">
-          <img src="/icons/logo-noha.png" alt="Noha" className="h-7" />
+          <img src="/icons/logo-noha.png" alt="Noha" className="h-8" />
           <div className="w-px h-6 bg-black/[0.06]" />
           <div>
-            <div className="text-xs font-bold text-blue-600 tracking-widest uppercase">Ações da Noha</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Gestão Operacional</div>
+            <div className="text-sm font-bold text-violet-600 tracking-widest uppercase">Ações da Noha</div>
+            <div className="text-xs text-gray-400 mt-0.5">Gestão Operacional</div>
           </div>
           <button onClick={() => setShowNew(true)}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 text-blue-600 text-[11px] font-bold hover:bg-blue-500/20 transition-all">
-            <Plus size={14} /> Nova
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-600 text-sm font-bold hover:bg-indigo-500/20 transition-all">
+            <Plus size={16} /> Nova
           </button>
         </div>
       </div>
@@ -459,7 +517,7 @@ export default function NohaPage({ view }) {
       {/* Filters */}
       <div className={`${pad}`}>
         <div className="flex gap-2 items-center flex-wrap glass-light px-3 py-2">
-          <span className="text-[8px] font-bold text-gray-400 tracking-widest uppercase">Filtros</span>
+          <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">Filtros</span>
           <Select value={filterFrente} onChange={setFilterFrente} options={['Todas', ...frenteNames]} />
           <Select value={filterPrioridade} onChange={setFilterPrioridade} options={['Todas', 'Baixa', 'Média', 'Alta', 'Urgente']} />
           <Select value={filterDono} onChange={setFilterDono} options={['Todos', ...(allDonos.length > 0 ? allDonos : DONOS_NOHA)]} />
