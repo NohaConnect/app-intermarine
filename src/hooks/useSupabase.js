@@ -216,22 +216,41 @@ export function useFrentes() {
   const [frentesCasa, setFrentesCasa] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function fetch() {
-      const [r1, r2, r3] = await Promise.all([
-        supabase.from('frentes_intermarine').select('*').eq('ativo', true).order('ordem'),
-        supabase.from('frentes_noha').select('*').eq('ativo', true).order('ordem'),
-        supabase.from('frentes_casa').select('*').eq('ativo', true).order('ordem')
-      ])
-      setFrentesIM(r1.data || [])
-      setFrentesNoha(r2.data || [])
-      setFrentesCasa(r3.data || [])
-      setLoading(false)
-    }
-    fetch()
+  const fetchAll = useCallback(async () => {
+    const [r1, r2, r3] = await Promise.all([
+      supabase.from('frentes_intermarine').select('*').eq('ativo', true).order('ordem'),
+      supabase.from('frentes_noha').select('*').eq('ativo', true).order('ordem'),
+      supabase.from('frentes_casa').select('*').eq('ativo', true).order('ordem')
+    ])
+    setFrentesIM(r1.data || [])
+    setFrentesNoha(r2.data || [])
+    setFrentesCasa(r3.data || [])
+    setLoading(false)
   }, [])
 
-  return { frentesIM, frentesNoha, frentesCasa, loading }
+  useEffect(() => { fetchAll() }, [fetchAll])
+
+  // Map workspace id → Supabase table name
+  const TABLE_MAP = { plano: 'frentes_intermarine', noha: 'frentes_noha', casa: 'frentes_casa' }
+
+  const addFrente = useCallback(async (workspaceId, nome, cor = '#c8c0af') => {
+    const table = TABLE_MAP[workspaceId]
+    if (!table) throw new Error('Workspace inválido')
+    // Get next ordem value
+    const { data: existing } = await supabase.from(table).select('ordem').order('ordem', { ascending: false }).limit(1)
+    const nextOrdem = (existing?.[0]?.ordem || 0) + 1
+    const { data, error } = await supabase
+      .from(table)
+      .insert({ nome, cor, ordem: nextOrdem, ativo: true })
+      .select()
+      .single()
+    if (error) throw error
+    // Refresh all frentes
+    await fetchAll()
+    return data
+  }, [fetchAll])
+
+  return { frentesIM, frentesNoha, frentesCasa, loading, addFrente, refetchFrentes: fetchAll }
 }
 
 // Hook para responsividade

@@ -17,7 +17,7 @@ const config = NOHA_CONFIG
 
 export default function NohaPage({ view = 'dashboard' }) {
   const { tarefas, loading, updateTarefa, addTarefa, deleteTarefa, addComentario } = useTarefas()
-  const { frentesNoha, frentesIM } = useFrentes()
+  const { frentesNoha, frentesIM, addFrente } = useFrentes()
   const { profile } = useAuth()
   const { addToast } = useUI()
   const { isMobile, isLandscape } = useResponsive()
@@ -86,6 +86,11 @@ export default function NohaPage({ view = 'dashboard' }) {
     addToast('Tarefa criada!')
   }, [addTarefa, addToast])
 
+  const handleAddFrente = useCallback(async (nome) => {
+    await addFrente('noha', nome)
+    addToast(`Frente "${nome}" criada!`)
+  }, [addFrente, addToast])
+
   // ─── Kanban helpers ────────────────────────────
   const getGroupKey = useCallback((item) => item.status, [])
   const getGroupColor = useCallback((g) => config.statusColors[g]?.c, [])
@@ -110,13 +115,14 @@ export default function NohaPage({ view = 'dashboard' }) {
         <DetailModal item={modalItem} config={config} frenteNames={frenteNames}
           frentesIMNames={frentesIMNames} frentesIMCores={frentesIMCores}
           onUpdate={handleUpdate} onDelete={handleDelete} onAddComment={addComentario}
+          onAddFrente={handleAddFrente}
           onClose={() => setModalId(null)} profileName={profile?.name} />
       )}
       {showNew && (
         <NewItemModal config={config} frenteNames={frenteNames}
           allDonos={allDonos.length > 0 ? allDonos : DONOS_NOHA}
           frentesIMNames={frentesIMNames}
-          onAdd={handleAdd} onClose={() => setShowNew(false)} />
+          onAdd={handleAdd} onAddFrente={handleAddFrente} onClose={() => setShowNew(false)} />
       )}
 
       <PageHeader config={config} onNew={() => setShowNew(true)} isMobile={isMobile} />

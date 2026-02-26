@@ -1,5 +1,6 @@
 import React, { memo, useState } from 'react'
 import { MessageSquare, Trash2, Target } from 'lucide-react'
+import FrenteSelect from './FrenteSelect'
 
 /**
  * DetailModal — detail view for an action/task.
@@ -13,6 +14,7 @@ const DetailModal = memo(function DetailModal({
   onUpdate,
   onDelete,
   onAddComment,
+  onAddFrente,
   onClose,
   profileName,
 }) {
@@ -71,10 +73,12 @@ const DetailModal = memo(function DetailModal({
           </div>
           <div>
             <label className="label">Frente</label>
-            <select value={item.frente}
-              onChange={e => onUpdate(item.id, { frente: e.target.value })} className="input-dark text-sm">
-              {frenteNames.map(f => <option key={f}>{f}</option>)}
-            </select>
+            <FrenteSelect value={item.frente}
+              onChange={v => onUpdate(item.id, { frente: v })}
+              frenteNames={frenteNames}
+              onAddFrente={onAddFrente}
+              accent={config.accent}
+              accentRgb={config.accentRgb} />
           </div>
           <div>
             <label className="label">Dono</label>

@@ -17,7 +17,7 @@ const config = PLANO_CONFIG
 
 export default function PlanoPage({ view = 'dashboard' }) {
   const { acoes, loading, updateAcao, addAcao, deleteAcao, addComentario } = useAcoes()
-  const { frentesIM } = useFrentes()
+  const { frentesIM, addFrente } = useFrentes()
   const { profile } = useAuth()
   const { addToast } = useUI()
   const { isMobile, isLandscape } = useResponsive()
@@ -89,6 +89,11 @@ export default function PlanoPage({ view = 'dashboard' }) {
     addToast('Ação criada!')
   }, [addAcao, addToast])
 
+  const handleAddFrente = useCallback(async (nome) => {
+    await addFrente('plano', nome)
+    addToast(`Frente "${nome}" criada!`)
+  }, [addFrente, addToast])
+
   // ─── Kanban helpers ────────────────────────────
   const kanbanGroups = kanbanGroup === 'status' ? config.statuses : frenteNames
   const getGroupKey = useCallback((item) => {
@@ -119,12 +124,13 @@ export default function PlanoPage({ view = 'dashboard' }) {
       {modalItem && (
         <DetailModal item={modalItem} config={config} frenteNames={frenteNames}
           onUpdate={handleUpdate} onDelete={handleDelete} onAddComment={addComentario}
+          onAddFrente={handleAddFrente}
           onClose={() => setModalId(null)} profileName={profile?.name} />
       )}
       {showNew && (
         <NewItemModal config={config} frenteNames={frenteNames}
           allDonos={allDonos.length > 0 ? allDonos : DONOS_PLANO}
-          onAdd={handleAdd} onClose={() => setShowNew(false)} />
+          onAdd={handleAdd} onAddFrente={handleAddFrente} onClose={() => setShowNew(false)} />
       )}
 
       <PageHeader config={config} onNew={() => setShowNew(true)} isMobile={isMobile} />

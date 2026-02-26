@@ -17,7 +17,7 @@ const config = CASA_CONFIG
 
 export default function CasaPage({ view = 'dashboard' }) {
   const { tarefas, loading, updateTarefa, addTarefa, deleteTarefa, addComentario } = useTarefasCasa()
-  const { frentesCasa } = useFrentes()
+  const { frentesCasa, addFrente } = useFrentes()
   const { profile } = useAuth()
   const { addToast } = useUI()
   const { isMobile, isLandscape } = useResponsive()
@@ -84,6 +84,11 @@ export default function CasaPage({ view = 'dashboard' }) {
     addToast('Tarefa criada!')
   }, [addTarefa, addToast])
 
+  const handleAddFrente = useCallback(async (nome) => {
+    await addFrente('casa', nome)
+    addToast(`Frente "${nome}" criada!`)
+  }, [addFrente, addToast])
+
   // ─── Kanban helpers ────────────────────────────
   const getGroupKey = useCallback((item) => item.status, [])
   const getGroupColor = useCallback((g) => config.statusColors[g]?.c, [])
@@ -107,12 +112,13 @@ export default function CasaPage({ view = 'dashboard' }) {
       {modalItem && (
         <DetailModal item={modalItem} config={config} frenteNames={frenteNames}
           onUpdate={handleUpdate} onDelete={handleDelete} onAddComment={addComentario}
+          onAddFrente={handleAddFrente}
           onClose={() => setModalId(null)} profileName={profile?.name} />
       )}
       {showNew && (
         <NewItemModal config={config} frenteNames={frenteNames}
           allDonos={allDonos.length > 0 ? allDonos : DONOS_CASA}
-          onAdd={handleAdd} onClose={() => setShowNew(false)} />
+          onAdd={handleAdd} onAddFrente={handleAddFrente} onClose={() => setShowNew(false)} />
       )}
 
       <PageHeader config={config} onNew={() => setShowNew(true)} isMobile={isMobile} />

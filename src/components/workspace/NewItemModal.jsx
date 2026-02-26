@@ -1,5 +1,6 @@
 import React, { memo, useState } from 'react'
 import { Target } from 'lucide-react'
+import FrenteSelect from './FrenteSelect'
 
 /**
  * NewItemModal — create new action/task.
@@ -11,6 +12,7 @@ const NewItemModal = memo(function NewItemModal({
   allDonos,
   frentesIMNames,
   onAdd,
+  onAddFrente,
   onClose,
 }) {
   const [form, setForm] = useState({
@@ -61,9 +63,13 @@ const NewItemModal = memo(function NewItemModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Frente</label>
-              <select value={form.frente} onChange={e => set('frente', e.target.value)} className="input-dark">
-                {frenteNames.map(f => <option key={f}>{f}</option>)}
-              </select>
+              <FrenteSelect value={form.frente}
+                onChange={v => set('frente', v)}
+                frenteNames={frenteNames}
+                onAddFrente={onAddFrente}
+                accent={config.accent}
+                accentRgb={config.accentRgb}
+                className="input-dark" />
             </div>
             <div>
               <label className="label">Prioridade</label>
