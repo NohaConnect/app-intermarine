@@ -1,13 +1,50 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Login from './pages/Login'
 import Plano from './pages/Plano'
 import Noha from './pages/Noha'
 import Settings from './pages/Settings'
 import Nav from './components/Nav'
+import { LayoutDashboard, Columns3, List } from 'lucide-react'
+
+function ViewSwitcher({ view, setView, accentColor }) {
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'kanban', label: 'Kanban', icon: Columns3 },
+    { id: 'list', label: 'Lista', icon: List },
+  ]
+  return (
+    <div className="sticky top-16 z-40" style={{ background: 'rgba(10,14,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(200,192,175,0.06)' }}>
+      <div className="max-w-7xl mx-auto flex justify-center py-2">
+        <div className="flex items-center gap-1 p-1 rounded-xl"
+          style={{ background: 'rgba(200,192,175,0.03)' }}>
+          {tabs.map(tab => {
+            const Icon = tab.icon
+            const isActive = view === tab.id
+            return (
+              <button key={tab.id} onClick={() => setView(tab.id)}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                style={isActive ? {
+                  background: `${accentColor}18`,
+                  color: '#e8ecf4',
+                  boxShadow: `0 0 16px ${accentColor}10`
+                } : {
+                  color: 'rgba(200,192,175,0.4)'
+                }}>
+                <Icon size={14} style={isActive ? { color: accentColor } : {}} />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function AppContent() {
   const { user, loading, workspace } = useAuth()
+  const [view, setView] = useState('dashboard')
 
   if (loading) {
     return (
@@ -29,12 +66,16 @@ function AppContent() {
 
   if (!user) return <Login />
 
+  const showViewSwitcher = workspace === 'plano' || workspace === 'noha'
+  const accentColor = workspace === 'plano' ? '#4ecdc4' : '#8b5cf6'
+
   return (
     <div className="min-h-screen">
       <Nav />
+      {showViewSwitcher && <ViewSwitcher view={view} setView={setView} accentColor={accentColor} />}
       <main>
-        {workspace === 'plano' && <Plano />}
-        {workspace === 'noha' && <Noha />}
+        {workspace === 'plano' && <Plano view={view} />}
+        {workspace === 'noha' && <Noha view={view} />}
         {workspace === 'settings' && <Settings />}
       </main>
     </div>

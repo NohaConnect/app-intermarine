@@ -26,13 +26,11 @@ const RingChart = ({ value, size = 120, stroke = 8, color = '#4ecdc4' }) => {
   )
 }
 
-export default function PlanoPage() {
+export default function PlanoPage({ view = 'dashboard' }) {
   const { acoes, loading, updateAcao, addAcao, deleteAcao, addComentario } = useAcoes()
   const { frentesIM } = useFrentes()
   const { profile } = useAuth()
   const { isMobile, isLandscape } = useResponsive()
-
-  const [view, setView] = useState('dashboard')
   const [filterFrente, setFilterFrente] = useState('Todas')
   const [filterPrioridade, setFilterPrioridade] = useState('Todas')
   const [filterDono, setFilterDono] = useState('Todos')
@@ -645,25 +643,8 @@ export default function PlanoPage() {
             <div className="text-xs mt-0.5" style={{ color: 'rgba(200,192,175,0.3)' }}>Gestão Estratégica</div>
           </div>
 
-          {/* View Switcher */}
-          <div className="ml-auto flex items-center gap-1 p-1 rounded-lg"
-            style={{ background: 'rgba(200,192,175,0.03)' }}>
-            <button onClick={() => setView('dashboard')}
-              className={`view-tab flex items-center gap-1.5 ${view === 'dashboard' ? 'view-tab-active' : ''}`}>
-              <LayoutDashboard size={14} /> <span className="hidden sm:inline">Dashboard</span>
-            </button>
-            <button onClick={() => setView('kanban')}
-              className={`view-tab flex items-center gap-1.5 ${view === 'kanban' ? 'view-tab-active' : ''}`}>
-              <Columns3 size={14} /> <span className="hidden sm:inline">Kanban</span>
-            </button>
-            <button onClick={() => setView('list')}
-              className={`view-tab flex items-center gap-1.5 ${view === 'list' ? 'view-tab-active' : ''}`}>
-              <List size={14} /> <span className="hidden sm:inline">Lista</span>
-            </button>
-          </div>
-
           <button onClick={() => setShowNew(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all"
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all"
             style={{ background: 'rgba(78,205,196,0.12)', color: '#4ecdc4' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(78,205,196,0.2)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(78,205,196,0.12)'}>
