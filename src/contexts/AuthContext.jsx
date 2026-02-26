@@ -8,28 +8,38 @@ export const useAuth = () => useContext(AuthContext)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [workspace, setWorkspace] = useState(() => {
-    try { return localStorage.getItem('workspace') || 'plano' }
-    catch { return 'plano' }
-  })
+  const [profileData, setProfileData] = useState(null)
 
-  // Derive profile from user metadata
+  // Fetch profile from profiles table (for is_superadmin)
+  const fetchProfile = async (userId) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      setProfileData(data)
+    } catch {
+      setProfileData(null)
+    }
+  }
+
+  // Derive profile from user metadata + DB profile
   const profile = user ? {
-    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+    name: profileData?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
     email: user.email,
-    role: user.user_metadata?.role || 'member'
+    role: profileData?.role || user.user_metadata?.role || 'member',
+    is_superadmin: profileData?.is_superadmin || user.email === 'contato@nohaoficial.com.br',
   } : null
 
   useEffect(() => {
-    // Safety timeout: if getSession hangs for more than 4 seconds, stop loading
-    const safetyTimer = setTimeout(() => {
-      setLoading(false)
-    }, 4000)
+    const safetyTimer = setTimeout(() => setLoading(false), 4000)
 
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         clearTimeout(safetyTimer)
         setUser(session?.user ?? null)
+        if (session?.user) fetchProfile(session.user.id)
         setLoading(false)
       })
       .catch(() => {
@@ -40,6 +50,7 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) fetchProfile(session.user.id)
       setLoading(false)
     })
 
@@ -48,11 +59,6 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe()
     }
   }, [])
-
-  const switchWorkspace = (ws) => {
-    setWorkspace(ws)
-    try { localStorage.setItem('workspace', ws) } catch {}
-  }
 
   const signInWithEmail = async (email, password) => {
     return await supabase.auth.signInWithPassword({ email, password })
@@ -66,6 +72,18 @@ export function AuthProvider({ children }) {
     })
   }
 
+  // Admin creates a user (for client access)
+  const createUser = async (email, password, name) => {
+    // Use signUp to create the user
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name, role: 'member' } }
+    })
+    if (error) throw error
+    return data
+  }
+
   const resetPassword = async (email) => {
     return await supabase.auth.resetPasswordForEmail(email)
   }
@@ -73,13 +91,13 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
-    try { localStorage.removeItem('workspace') } catch {}
+    setProfileData(null)
   }
 
   return (
     <AuthContext.Provider value={{
-      user, loading, profile, workspace,
-      switchWorkspace, signInWithEmail, signUpWithEmail, resetPassword, signOut
+      user, loading, profile,
+      signInWithEmail, signUpWithEmail, createUser, resetPassword, signOut
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,28 +1,31 @@
 import React, { memo, useState } from 'react'
-import { MessageSquare, Trash2, Target } from 'lucide-react'
+import { MessageSquare, Trash2 } from 'lucide-react'
 import FrenteSelect from './FrenteSelect'
+import DonoSelect from './DonoSelect'
 
 /**
- * DetailModal — detail view for an action/task.
- * Config-driven to support both Plano and Noha workspaces.
+ * DetailModal — detail view for a task.
+ * Config-driven, works with unified tasks table.
  */
 const DetailModal = memo(function DetailModal({
   item,
   config,
   frenteNames,
-  frentesIMNames,
+  donoNames,
   onUpdate,
   onDelete,
   onAddComment,
   onAddFrente,
+  onAddDono,
   onClose,
   profileName,
+  workspaceName,
 }) {
   const [newComment, setNewComment] = useState('')
   if (!item) return null
 
-  const title = item[config.titleField]
-  const comments = item[config.commentsField] || []
+  const title = item.titulo
+  const comments = item.comments || []
 
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return
@@ -31,10 +34,14 @@ const DetailModal = memo(function DetailModal({
   }
 
   const handleDelete = () => {
-    if (confirm(`Excluir ${config.itemLabel.toLowerCase()}?`)) {
+    if (confirm(`Excluir ${config.item_label.toLowerCase()}?`)) {
       onDelete(item.id)
     }
   }
+
+  const statuses = config.statuses || []
+  const priorities = config.priorities || []
+  const statusColors = config.status_colors || {}
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
@@ -46,7 +53,12 @@ const DetailModal = memo(function DetailModal({
 
         {/* Header */}
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-lg font-black text-white pr-4">{title}</h2>
+          <div>
+            <h2 className="text-lg font-black text-white pr-4">{title}</h2>
+            {workspaceName && (
+              <span className="text-xs font-medium" style={{ color: config.accent_color }}>{workspaceName}</span>
+            )}
+          </div>
           <button onClick={onClose}
             className="text-xl leading-none p-1 -m-1" style={{ color: 'rgba(200,192,175,0.3)' }}>×</button>
         </div>
@@ -59,16 +71,16 @@ const DetailModal = memo(function DetailModal({
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
             <label className="label">Status</label>
-            <select value={config.normalizeStatus(item.status)}
+            <select value={item.status}
               onChange={e => onUpdate(item.id, { status: e.target.value })} className="input-dark text-sm">
-              {config.statuses.map(s => <option key={s}>{s}</option>)}
+              {statuses.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
             <label className="label">Prioridade</label>
             <select value={item.prioridade}
               onChange={e => onUpdate(item.id, { prioridade: e.target.value })} className="input-dark text-sm">
-              {(config.priorities || Object.keys(config.priorityConfig)).map(p => <option key={p}>{p}</option>)}
+              {priorities.map(p => <option key={p}>{p}</option>)}
             </select>
           </div>
           <div>
@@ -77,13 +89,17 @@ const DetailModal = memo(function DetailModal({
               onChange={v => onUpdate(item.id, { frente: v })}
               frenteNames={frenteNames}
               onAddFrente={onAddFrente}
-              accent={config.accent}
-              accentRgb={config.accentRgb} />
+              accent={config.accent_color}
+              accentRgb={config.accent_rgb} />
           </div>
           <div>
             <label className="label">Dono</label>
-            <input value={item.dono || ''}
-              onChange={e => onUpdate(item.id, { dono: e.target.value })} className="input-dark text-sm" />
+            <DonoSelect value={item.dono || ''}
+              onChange={v => onUpdate(item.id, { dono: v })}
+              donoNames={donoNames || []}
+              onAddDono={onAddDono}
+              accent={config.accent_color}
+              accentRgb={config.accent_rgb} />
           </div>
           <div>
             <label className="label">Prazo</label>
@@ -95,23 +111,9 @@ const DetailModal = memo(function DetailModal({
             <div className="flex items-center gap-2">
               <input type="range" min="0" max="100" step="5" value={item.progresso || 0}
                 onChange={e => onUpdate(item.id, { progresso: parseInt(e.target.value) })} className="flex-1" />
-              <span className="text-sm font-bold w-8 text-right" style={{ color: config.accent }}>{item.progresso || 0}%</span>
+              <span className="text-sm font-bold w-8 text-right" style={{ color: config.accent_color }}>{item.progresso || 0}%</span>
             </div>
           </div>
-          {/* Objetivo Intermarine (Noha only) */}
-          {config.hasObjetivo && (
-            <div className="col-span-2">
-              <label className="label flex items-center gap-1"><Target size={10} /> Objetivo Intermarine</label>
-              <select value={item.objetivo_intermarine || ''}
-                onChange={e => onUpdate(item.id, { objetivo_intermarine: e.target.value || null })} className="input-dark text-sm">
-                <option value="">Nenhum (sem vínculo)</option>
-                {(frentesIMNames || []).map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-              <p className="text-xs mt-1" style={{ color: 'rgba(200,192,175,0.25)' }}>
-                Conecta esta tarefa a uma frente estratégica do Plano Intermarine
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Comments */}
@@ -123,7 +125,7 @@ const DetailModal = memo(function DetailModal({
           <div className="space-y-2 max-h-40 overflow-y-auto mb-3">
             {comments.map(c => (
               <div key={c.id} className="text-sm p-2 rounded-lg"
-                style={{ background: c.auto ? `rgba(${config.accentRgb},0.06)` : 'rgba(200,192,175,0.03)' }}>
+                style={{ background: c.auto ? `rgba(${config.accent_rgb},0.06)` : 'rgba(200,192,175,0.03)' }}>
                 <div className="text-white/70">{c.texto}</div>
                 <div className="text-xs mt-0.5" style={{ color: 'rgba(200,192,175,0.3)' }}>
                   {c.autor && `${c.autor} · `}
@@ -141,7 +143,7 @@ const DetailModal = memo(function DetailModal({
               placeholder="Adicionar comentário..." className="input-dark text-sm flex-1" />
             <button onClick={handleSubmitComment}
               className="px-3 py-2 rounded-xl text-sm font-bold transition-all active:scale-95"
-              style={{ background: `rgba(${config.accentRgb},0.12)`, color: config.accent }}>
+              style={{ background: `rgba(${config.accent_rgb},0.12)`, color: config.accent_color }}>
               Enviar
             </button>
           </div>
@@ -152,7 +154,7 @@ const DetailModal = memo(function DetailModal({
           style={{ color: 'rgba(231,76,94,0.5)' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(231,76,94,0.08)'; e.currentTarget.style.color = '#e74c5e' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(231,76,94,0.5)' }}>
-          <Trash2 size={14} /> Excluir {config.itemLabel.toLowerCase()}
+          <Trash2 size={14} /> Excluir {config.item_label.toLowerCase()}
         </button>
       </div>
     </div>
