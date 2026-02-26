@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useTarefas, useFrentes, useResponsive } from '../hooks/useSupabase'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -39,6 +39,9 @@ export default function NohaPage() {
   const [newComment, setNewComment] = useState('')
   const [showNew, setShowNew] = useState(false)
   const [draggedId, setDraggedId] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOverStatus, setDragOverStatus] = useState(null)
+  const dragRef = useRef(false)
 
   const frenteNames = frentesNoha.length > 0 ? frentesNoha.map(f => f.nome) : Object.keys(FRENTES_NOHA_CORES)
   const frenteCores = frentesNoha.length > 0 ? Object.fromEntries(frentesNoha.map(f => [f.nome, f.cor])) : FRENTES_NOHA_CORES
@@ -84,13 +87,47 @@ export default function NohaPage() {
   const handleDelete = async (id) => {
     if (confirm('Excluir esta tarefa?')) { await deleteTarefa(id); setModalId(null) }
   }
-  const handleDragStart = (e, id) => { setDraggedId(id); e.dataTransfer.effectAllowed = 'move' }
-  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+  const handleDragStart = (e, id) => {
+    setDraggedId(id)
+    setIsDragging(true)
+    dragRef.current = true
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', id.toString())
+    if (e.target) {
+      setTimeout(() => { e.target.style.opacity = '0.4' }, 0)
+    }
+  }
+  const handleDragEnd = (e) => {
+    if (e.target) e.target.style.opacity = '1'
+    setDraggedId(null)
+    setIsDragging(false)
+    setDragOverStatus(null)
+    setTimeout(() => { dragRef.current = false }, 200)
+  }
+  const handleDragOver = (e, status) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (status !== undefined) setDragOverStatus(status)
+  }
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverStatus(null)
+    }
+  }
   const handleDrop = async (e, targetStatus) => {
     e.preventDefault()
+    setDragOverStatus(null)
     if (!draggedId) return
-    await handleUpdate(draggedId, { status: targetStatus })
+    const currentItem = tarefas.find(t => t.id === draggedId)
+    if (currentItem?.status !== targetStatus) {
+      await handleUpdate(draggedId, { status: targetStatus })
+    }
     setDraggedId(null)
+    setIsDragging(false)
+  }
+  const handleCardClick = (id) => {
+    if (dragRef.current) return
+    setModalId(id)
   }
 
   // Shared Components
@@ -136,7 +173,7 @@ export default function NohaPage() {
           <div className="relative flex-shrink-0">
             <RingChart value={stats.pct} size={isMobile ? 100 : 120} color="#8b5cf6" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center" style={{ transform: 'rotate(90deg)' }}>
+              <div className="text-center">
                 <div className="text-2xl font-black text-white">{stats.pct}%</div>
                 <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(200,192,175,0.4)' }}>Concluído</div>
               </div>
@@ -268,6 +305,7 @@ export default function NohaPage() {
     <div className="flex gap-3 overflow-x-auto pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
       {NOHA_STATUS.map(status => {
         const items = filtered.filter(t => t.status === status)
+        const isOver = dragOverStatus === status
         return (
           <div key={status} className="min-w-[280px] max-w-[320px] flex-shrink-0">
             <div className="flex items-center gap-2 mb-3 px-2 py-2 rounded-lg"
@@ -279,14 +317,23 @@ export default function NohaPage() {
                 {items.length}
               </span>
             </div>
-            <div className="space-y-2.5" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, status)}>
+            <div className="space-y-2.5 min-h-[60px] rounded-xl p-1 transition-all duration-200"
+              style={{
+                background: isOver ? 'rgba(139,92,246,0.06)' : 'transparent',
+                border: isOver ? '2px dashed rgba(139,92,246,0.3)' : '2px dashed transparent'
+              }}
+              onDragOver={(e) => handleDragOver(e, status)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, status)}>
               {items.map(item => (
-                <div key={item.id} draggable onDragStart={(e) => handleDragStart(e, item.id)}
-                  className={`glass-card p-3 card-hover cursor-move border-l-4 transition-all ${draggedId === item.id ? 'opacity-40 scale-95' : ''}`}
+                <div key={item.id} draggable
+                  onDragStart={(e) => handleDragStart(e, item.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`glass-card p-3 card-hover cursor-grab active:cursor-grabbing border-l-4 transition-all ${draggedId === item.id ? 'opacity-30 scale-95' : ''}`}
                   style={{ borderLeftColor: frenteCores[item.frente] || '#8b5cf6' }}
-                  onClick={() => setModalId(item.id)}>
+                  onClick={() => handleCardClick(item.id)}>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <GripVertical size={14} className="cursor-grab active:cursor-grabbing flex-shrink-0" style={{ color: 'rgba(200,192,175,0.15)' }} />
+                    <GripVertical size={14} className="flex-shrink-0" style={{ color: 'rgba(200,192,175,0.15)' }} />
                     <span className="text-sm font-bold text-white/90 flex-1 truncate">{item.titulo}</span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap mb-2 ml-6">
@@ -310,6 +357,11 @@ export default function NohaPage() {
                   </div>
                 </div>
               ))}
+              {items.length === 0 && (
+                <div className="text-center py-6 text-xs" style={{ color: 'rgba(200,192,175,0.2)' }}>
+                  Arraste cards aqui
+                </div>
+              )}
             </div>
           </div>
         )

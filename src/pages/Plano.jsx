@@ -41,6 +41,9 @@ export default function PlanoPage() {
   const [showNew, setShowNew] = useState(false)
   const [kanbanGroup, setKanbanGroup] = useState('status')
   const [draggedId, setDraggedId] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOverGroup, setDragOverGroup] = useState(null)
+  const dragRef = useRef(false)
 
   const frenteNames = frentesIM.length > 0 ? frentesIM.map(f => f.nome) : Object.keys(FRENTES_IM_CORES)
   const frenteCores = frentesIM.length > 0 ? Object.fromEntries(frentesIM.map(f => [f.nome, f.cor])) : FRENTES_IM_CORES
@@ -87,14 +90,52 @@ export default function PlanoPage() {
   const handleDelete = async (id) => {
     if (confirm('Excluir esta ação?')) { await deleteAcao(id); setModalId(null) }
   }
-  const handleDragStart = (e, id) => { setDraggedId(id); e.dataTransfer.effectAllowed = 'move' }
-  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+  const handleDragStart = (e, id) => {
+    setDraggedId(id)
+    setIsDragging(true)
+    dragRef.current = true
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', id.toString())
+    // Make ghost semi-transparent
+    if (e.target) {
+      setTimeout(() => { e.target.style.opacity = '0.4' }, 0)
+    }
+  }
+  const handleDragEnd = (e) => {
+    if (e.target) e.target.style.opacity = '1'
+    setDraggedId(null)
+    setIsDragging(false)
+    setDragOverGroup(null)
+    // Prevent click from firing after drag
+    setTimeout(() => { dragRef.current = false }, 200)
+  }
+  const handleDragOver = (e, group) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (group !== undefined) setDragOverGroup(group)
+  }
+  const handleDragLeave = (e) => {
+    // Only reset if leaving the column container
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverGroup(null)
+    }
+  }
   const handleDrop = async (e, targetGroup) => {
     e.preventDefault()
+    setDragOverGroup(null)
     if (!draggedId) return
     const field = kanbanGroup === 'status' ? 'status' : 'frente'
-    await handleUpdate(draggedId, { [field]: targetGroup })
+    const currentItem = acoes.find(a => a.id === draggedId)
+    const currentValue = field === 'status' ? normalizeStatus(currentItem?.[field]) : currentItem?.[field]
+    if (currentValue !== targetGroup) {
+      await handleUpdate(draggedId, { [field]: targetGroup })
+    }
     setDraggedId(null)
+    setIsDragging(false)
+  }
+  const handleCardClick = (id) => {
+    if (dragRef.current) return // Prevent click after drag
+    setModalId(id)
   }
 
   // Shared Components
@@ -142,7 +183,7 @@ export default function PlanoPage() {
           <div className="relative flex-shrink-0">
             <RingChart value={stats.pct} size={isMobile ? 100 : 120} color="#4ecdc4" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center" style={{ transform: 'rotate(90deg)' }}>
+              <div className="text-center">
                 <div className="text-2xl font-black text-white">{stats.pct}%</div>
                 <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(200,192,175,0.4)' }}>Concluído</div>
               </div>
@@ -291,6 +332,7 @@ export default function PlanoPage() {
         {groups.map(group => {
           const items = getGroupItems(group)
           if (items.length === 0 && kanbanGroup !== 'status') return null
+          const isOver = dragOverGroup === group
           return (
             <div key={group} className="min-w-[280px] max-w-[320px] flex-shrink-0">
               <div className="flex items-center gap-2 mb-3 px-2 py-2 rounded-lg"
@@ -302,14 +344,23 @@ export default function PlanoPage() {
                   {items.length}
                 </span>
               </div>
-              <div className="space-y-2.5" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, group)}>
+              <div className="space-y-2.5 min-h-[60px] rounded-xl p-1 transition-all duration-200"
+                style={{
+                  background: isOver ? 'rgba(78,205,196,0.06)' : 'transparent',
+                  border: isOver ? '2px dashed rgba(78,205,196,0.3)' : '2px dashed transparent'
+                }}
+                onDragOver={(e) => handleDragOver(e, group)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, group)}>
                 {items.map(item => (
-                  <div key={item.id} draggable onDragStart={(e) => handleDragStart(e, item.id)}
-                    className={`glass-card p-3 card-hover cursor-move border-l-4 transition-all ${draggedId === item.id ? 'opacity-40 scale-95' : ''}`}
+                  <div key={item.id} draggable
+                    onDragStart={(e) => handleDragStart(e, item.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`glass-card p-3 card-hover cursor-grab active:cursor-grabbing border-l-4 transition-all ${draggedId === item.id ? 'opacity-30 scale-95' : ''}`}
                     style={{ borderLeftColor: kanbanGroup === 'status' ? frenteCores[item.frente] || '#4da8da' : getGroupColor(group) }}
-                    onClick={() => setModalId(item.id)}>
+                    onClick={() => handleCardClick(item.id)}>
                     <div className="flex items-center gap-2 mb-2">
-                      <GripVertical size={14} className="cursor-grab active:cursor-grabbing flex-shrink-0" style={{ color: 'rgba(200,192,175,0.15)' }} />
+                      <GripVertical size={14} className="flex-shrink-0" style={{ color: 'rgba(200,192,175,0.15)' }} />
                       <span className="text-sm font-bold text-white/90 flex-1 truncate">{item.acao}</span>
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap mb-2">
@@ -326,7 +377,7 @@ export default function PlanoPage() {
                         <User size={11} /> {item.dono}
                       </span>
                       {item.deadline && (
-                        <span className={`text-xs flex items-center gap-1`}
+                        <span className="text-xs flex items-center gap-1"
                           style={{ color: isOverdue(item.deadline) && item.status !== 'Concluído' ? '#e74c5e' : 'rgba(200,192,175,0.4)' }}>
                           <Calendar size={11} /> {formatDate(item.deadline)}
                         </span>
@@ -339,6 +390,11 @@ export default function PlanoPage() {
                     )}
                   </div>
                 ))}
+                {items.length === 0 && (
+                  <div className="text-center py-6 text-xs" style={{ color: 'rgba(200,192,175,0.2)' }}>
+                    Arraste cards aqui
+                  </div>
+                )}
               </div>
             </div>
           )
