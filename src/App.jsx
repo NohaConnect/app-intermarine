@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { UIProvider, useUI } from './contexts/UIContext'
 import Login from './pages/Login'
 import Plano from './pages/Plano'
+import Casa from './pages/Casa'
 import Noha from './pages/Noha'
 import Settings from './pages/Settings'
 import Nav from './components/Nav'
@@ -71,9 +72,14 @@ function AppContent() {
 
   if (!user) return <Login />
 
-  const showViewSwitcher = workspace === 'plano' || workspace === 'noha'
-  const accentColor = workspace === 'plano' ? '#4ecdc4' : '#8b5cf6'
-  const accentRgb = workspace === 'plano' ? '78,205,196' : '139,92,246'
+  const showViewSwitcher = workspace === 'plano' || workspace === 'casa' || workspace === 'noha'
+  const accentMap = {
+    plano: { color: '#4ecdc4', rgb: '78,205,196' },
+    casa:  { color: '#d4a574', rgb: '212,165,116' },
+    noha:  { color: '#8b5cf6', rgb: '139,92,246' },
+  }
+  const accentColor = accentMap[workspace]?.color || '#4ecdc4'
+  const accentRgb = accentMap[workspace]?.rgb || '78,205,196'
 
   return (
     <div className="min-h-screen">
@@ -81,6 +87,7 @@ function AppContent() {
       {showViewSwitcher && <ViewSwitcher accentColor={accentColor} accentRgb={accentRgb} />}
       <main>
         {workspace === 'plano' && <Plano view={view} />}
+        {workspace === 'casa' && <Casa view={view} />}
         {workspace === 'noha' && <Noha view={view} />}
         {workspace === 'settings' && <Settings />}
       </main>

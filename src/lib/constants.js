@@ -77,6 +77,43 @@ export const FRENTES_NOHA_CORES = {
 // Donos Noha (fallback)
 export const DONOS_NOHA = ['Rodrigo', 'Fernando']
 
+// ═══════════ CASA INTERMARINE ═══════════
+
+// Status Casa Intermarine
+export const CASA_STATUS = ['Pendente', 'Em Andamento', 'Finalizado', 'Em Espera']
+
+export const CASA_STATUS_COLORS = {
+  'Pendente':      { c: '#a0926d', bg: 'rgba(160,146,109,0.10)', b: 'rgba(160,146,109,0.20)' },
+  'Em Andamento':  { c: '#d4a574', bg: 'rgba(212,165,116,0.10)', b: 'rgba(212,165,116,0.22)' },
+  'Finalizado':    { c: '#7eb89c', bg: 'rgba(126,184,156,0.10)', b: 'rgba(126,184,156,0.22)' },
+  'Em Espera':     { c: '#c8c0af', bg: 'rgba(200,192,175,0.10)', b: 'rgba(200,192,175,0.22)' }
+}
+
+// Prioridades Casa
+export const CASA_PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Urgente']
+
+export const CASA_PRIORIDADE_CORES = {
+  'Baixa':   '#a0926d',
+  'Média':   '#d4a574',
+  'Alta':    '#c8c0af',
+  'Urgente': '#e74c5e'
+}
+
+// Frentes Casa (fallback)
+export const FRENTES_CASA_DEFAULT = ['Projetos', 'Estoque', 'Showroom', 'Fornecedores', 'Atendimento', 'Marketing']
+
+export const FRENTES_CASA_CORES = {
+  'Projetos': '#d4a574',
+  'Estoque': '#a0926d',
+  'Showroom': '#7eb89c',
+  'Fornecedores': '#c8c0af',
+  'Atendimento': '#b8860b',
+  'Marketing': '#8b7355'
+}
+
+// Donos Casa (fallback)
+export const DONOS_CASA = ['Rodrigo', 'Equipe Casa']
+
 // Helper: split donos string
 export function splitDonos(str) {
   if (!str) return []

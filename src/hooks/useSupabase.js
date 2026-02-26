@@ -140,26 +140,98 @@ export function useTarefas() {
   return { tarefas, loading, error, updateTarefa, addTarefa, deleteTarefa, addComentario, refetch: fetchTarefas }
 }
 
+// Hook para tarefas Casa Intermarine
+export function useTarefasCasa() {
+  const [tarefas, setTarefas] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchTarefas = useCallback(async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('tarefas_casa')
+        .select('*, comentarios_casa(*)')
+        .order('id')
+      if (error) throw error
+      setTarefas(data || [])
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchTarefas() }, [fetchTarefas])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('casa-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas_casa' }, () => fetchTarefas())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comentarios_casa' }, () => fetchTarefas())
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [fetchTarefas])
+
+  const updateTarefa = async (id, updates) => {
+    const { error } = await supabase.from('tarefas_casa').update(updates).eq('id', id)
+    if (error) throw error
+    setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+  }
+
+  const addTarefa = async (tarefa) => {
+    const { data, error } = await supabase.from('tarefas_casa').insert(tarefa).select().single()
+    if (error) throw error
+    setTarefas(prev => [...prev, { ...data, comentarios_casa: [] }])
+    return data
+  }
+
+  const deleteTarefa = async (id) => {
+    const { error } = await supabase.from('tarefas_casa').delete().eq('id', id)
+    if (error) throw error
+    setTarefas(prev => prev.filter(t => t.id !== id))
+  }
+
+  const addComentario = async (tarefaId, texto, autor, auto = false) => {
+    const { data, error } = await supabase
+      .from('comentarios_casa')
+      .insert({ tarefa_id: tarefaId, texto, autor, auto })
+      .select()
+      .single()
+    if (error) throw error
+    setTarefas(prev => prev.map(t =>
+      t.id === tarefaId
+        ? { ...t, comentarios_casa: [...(t.comentarios_casa || []), data] }
+        : t
+    ))
+  }
+
+  return { tarefas, loading, error, updateTarefa, addTarefa, deleteTarefa, addComentario, refetch: fetchTarefas }
+}
+
 // Hook para frentes
 export function useFrentes() {
   const [frentesIM, setFrentesIM] = useState([])
   const [frentesNoha, setFrentesNoha] = useState([])
+  const [frentesCasa, setFrentesCasa] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetch() {
-      const [r1, r2] = await Promise.all([
+      const [r1, r2, r3] = await Promise.all([
         supabase.from('frentes_intermarine').select('*').eq('ativo', true).order('ordem'),
-        supabase.from('frentes_noha').select('*').eq('ativo', true).order('ordem')
+        supabase.from('frentes_noha').select('*').eq('ativo', true).order('ordem'),
+        supabase.from('frentes_casa').select('*').eq('ativo', true).order('ordem')
       ])
       setFrentesIM(r1.data || [])
       setFrentesNoha(r2.data || [])
+      setFrentesCasa(r3.data || [])
       setLoading(false)
     }
     fetch()
   }, [])
 
-  return { frentesIM, frentesNoha, loading }
+  return { frentesIM, frentesNoha, frentesCasa, loading }
 }
 
 // Hook para responsividade
