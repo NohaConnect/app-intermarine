@@ -13,11 +13,15 @@ function AppContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/5 flex items-center justify-center">
-            <img src="/icons/original-icon.png" alt="Intermarine" className="w-10 h-10 object-contain"
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{ background: 'rgba(200, 192, 175, 0.06)', border: '1px solid rgba(200, 192, 175, 0.08)' }}>
+            <img src="/icons/original-icon.png" alt="Intermarine" className="w-12 h-12 object-contain"
               onError={(e) => { e.target.onerror = null; e.target.src = '/icons/icon-96x96.png' }} />
           </div>
-          <div className="w-8 h-8 mx-auto border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 mx-auto border-2 rounded-full animate-spin"
+            style={{ borderColor: 'rgba(200, 192, 175, 0.1)', borderTopColor: '#c8c0af' }} />
+          <p className="mt-4 text-xs font-medium tracking-widest uppercase"
+            style={{ color: 'rgba(200, 192, 175, 0.3)' }}>Carregando</p>
         </div>
       </div>
     )
@@ -29,9 +33,9 @@ function AppContent() {
     <div className="min-h-screen">
       <Nav />
       <main>
-        {workspace === 'settings' && <Settings />}
         {workspace === 'plano' && <Plano />}
         {workspace === 'noha' && <Noha />}
+        {workspace === 'settings' && <Settings />}
       </main>
     </div>
   )
