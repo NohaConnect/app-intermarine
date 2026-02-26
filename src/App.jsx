@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { UIProvider, useUI } from './contexts/UIContext'
 import Login from './pages/Login'
 import Plano from './pages/Plano'
 import Noha from './pages/Noha'
@@ -7,32 +8,35 @@ import Settings from './pages/Settings'
 import Nav from './components/Nav'
 import { LayoutDashboard, Columns3, List } from 'lucide-react'
 
-function ViewSwitcher({ view, setView, accentColor }) {
+// ─── View Switcher (below Nav) ───────────────────────
+function ViewSwitcher({ accentColor, accentRgb }) {
+  const { view, setView } = useUI()
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'kanban', label: 'Kanban', icon: Columns3 },
     { id: 'list', label: 'Lista', icon: List },
   ]
   return (
-    <div className="sticky top-16 z-40" style={{ background: 'rgba(10,14,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(200,192,175,0.06)' }}>
-      <div className="max-w-7xl mx-auto flex justify-center py-2">
-        <div className="flex items-center gap-1 p-1 rounded-xl"
+    <div className="sticky top-16 z-40"
+      style={{ background: 'rgba(10,14,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(200,192,175,0.06)' }}>
+      <div className="flex justify-center py-2 px-3">
+        <div className="flex items-center gap-1 p-1 rounded-xl w-full sm:w-auto justify-center"
           style={{ background: 'rgba(200,192,175,0.03)' }}>
           {tabs.map(tab => {
             const Icon = tab.icon
             const isActive = view === tab.id
             return (
               <button key={tab.id} onClick={() => setView(tab.id)}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                className="flex items-center gap-1.5 flex-1 sm:flex-none justify-center px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 active:scale-95"
                 style={isActive ? {
-                  background: `${accentColor}18`,
+                  background: `rgba(${accentRgb},0.15)`,
                   color: '#e8ecf4',
-                  boxShadow: `0 0 16px ${accentColor}10`
+                  boxShadow: `0 0 16px rgba(${accentRgb},0.08)`
                 } : {
                   color: 'rgba(200,192,175,0.4)'
                 }}>
-                <Icon size={14} style={isActive ? { color: accentColor } : {}} />
-                {tab.label}
+                <Icon size={15} style={isActive ? { color: accentColor } : {}} />
+                <span className="text-xs sm:text-sm">{tab.label}</span>
               </button>
             )
           })}
@@ -42,9 +46,10 @@ function ViewSwitcher({ view, setView, accentColor }) {
   )
 }
 
+// ─── App Content ─────────────────────────────────────
 function AppContent() {
   const { user, loading, workspace } = useAuth()
-  const [view, setView] = useState('dashboard')
+  const { view } = useUI()
 
   if (loading) {
     return (
@@ -68,11 +73,12 @@ function AppContent() {
 
   const showViewSwitcher = workspace === 'plano' || workspace === 'noha'
   const accentColor = workspace === 'plano' ? '#4ecdc4' : '#8b5cf6'
+  const accentRgb = workspace === 'plano' ? '78,205,196' : '139,92,246'
 
   return (
     <div className="min-h-screen">
       <Nav />
-      {showViewSwitcher && <ViewSwitcher view={view} setView={setView} accentColor={accentColor} />}
+      {showViewSwitcher && <ViewSwitcher accentColor={accentColor} accentRgb={accentRgb} />}
       <main>
         {workspace === 'plano' && <Plano view={view} />}
         {workspace === 'noha' && <Noha view={view} />}
@@ -85,7 +91,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <UIProvider>
+        <AppContent />
+      </UIProvider>
     </AuthProvider>
   )
 }

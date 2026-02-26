@@ -11,6 +11,7 @@
     -moz-osx-font-smoothing: grayscale;
     background: linear-gradient(160deg, #0a0e1a 0%, #141720 40%, #0f1a2e 70%, #0a0e1a 100%);
     min-height: 100vh;
+    min-height: 100dvh;
   }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -25,7 +26,7 @@
 }
 
 @layer components {
-  /* === GLASS SYSTEM === */
+  /* ═══════════ GLASS SYSTEM ═══════════ */
   .glass-dark {
     background: rgba(20, 23, 32, 0.6);
     backdrop-filter: blur(24px) saturate(180%);
@@ -33,7 +34,6 @@
     border: 1px solid rgba(200, 192, 175, 0.06);
     border-radius: 1rem;
   }
-
   .glass-card {
     background: rgba(200, 192, 175, 0.03);
     backdrop-filter: blur(20px) saturate(150%);
@@ -41,14 +41,12 @@
     border: 1px solid rgba(200, 192, 175, 0.06);
     border-radius: 1rem;
   }
-
   .glass-nav {
     background: rgba(10, 14, 26, 0.85);
     backdrop-filter: blur(32px) saturate(200%);
     -webkit-backdrop-filter: blur(32px) saturate(200%);
     border-bottom: 1px solid rgba(200, 192, 175, 0.08);
   }
-
   .glass-modal {
     background: rgba(20, 23, 32, 0.95);
     backdrop-filter: blur(40px) saturate(200%);
@@ -57,7 +55,7 @@
     border-radius: 1.25rem;
   }
 
-  /* === BUTTONS === */
+  /* ═══════════ BUTTONS ═══════════ */
   .btn-primary {
     @apply px-5 py-3 rounded-xl font-bold text-sm transition-all duration-200 active:scale-95;
     background: linear-gradient(135deg, #4ecdc4 0%, #44b8b0 100%);
@@ -68,14 +66,12 @@
     box-shadow: 0 6px 32px rgba(78, 205, 196, 0.35);
     transform: translateY(-1px);
   }
-
   .btn-gold {
     @apply px-5 py-3 rounded-xl font-bold text-sm transition-all duration-200 active:scale-95;
     background: linear-gradient(135deg, #c8c0af 0%, #b0a794 100%);
     color: #141720;
     box-shadow: 0 4px 24px rgba(200, 192, 175, 0.15);
   }
-
   .btn-ghost {
     @apply px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95;
     color: rgba(200, 192, 175, 0.6);
@@ -85,12 +81,13 @@
     color: rgba(200, 192, 175, 0.9);
   }
 
-  /* === INPUTS === */
+  /* ═══════════ INPUTS ═══════════ */
   .input-dark {
     @apply w-full px-4 py-3 rounded-xl text-sm font-sans outline-none transition-all duration-200;
     background: rgba(200, 192, 175, 0.04);
     border: 1px solid rgba(200, 192, 175, 0.08);
     color: #e8ecf4;
+    font-size: 16px; /* Prevent iOS auto-zoom */
   }
   .input-dark::placeholder { color: rgba(200, 192, 175, 0.3); }
   .input-dark:focus {
@@ -98,58 +95,55 @@
     background: rgba(200, 192, 175, 0.06);
     box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.08);
   }
+  @media (min-width: 640px) {
+    .input-dark { font-size: 0.875rem; }
+  }
 
   .select-dark {
     @apply text-sm font-semibold rounded-lg px-2.5 py-1.5 outline-none cursor-pointer transition-all;
     background: rgba(200, 192, 175, 0.05);
     color: rgba(200, 192, 175, 0.7);
     border: 1px solid rgba(200, 192, 175, 0.08);
+    font-size: 16px; /* Prevent iOS auto-zoom */
   }
-  .select-dark:focus {
-    border-color: rgba(78, 205, 196, 0.3);
+  .select-dark:focus { border-color: rgba(78, 205, 196, 0.3); }
+  @media (min-width: 640px) {
+    .select-dark { font-size: 0.875rem; }
   }
 
-  /* === LABELS === */
   .label {
     @apply text-[10px] font-bold uppercase tracking-widest mb-1.5 block;
     color: rgba(200, 192, 175, 0.4);
   }
 
-  /* === CARDS === */
-  .card-hover {
-    @apply transition-all duration-300;
-  }
-  .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border-color: rgba(200, 192, 175, 0.12);
-  }
-
-  /* === PROGRESS BAR === */
-  .progress-bar {
-    @apply w-full h-2 rounded-full overflow-hidden;
-    background: rgba(200, 192, 175, 0.06);
-  }
-  .progress-bar-sm {
-    @apply w-full h-1.5 rounded-full overflow-hidden;
-    background: rgba(200, 192, 175, 0.06);
+  /* ═══════════ CARDS ═══════════ */
+  .card-hover { @apply transition-all duration-300; }
+  @media (hover: hover) {
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border-color: rgba(200, 192, 175, 0.12);
+    }
   }
 
-  /* === VIEW SWITCHER === */
+  /* ═══════════ PROGRESS BAR ═══════════ */
+  .progress-bar { @apply w-full h-2 rounded-full overflow-hidden; background: rgba(200, 192, 175, 0.06); }
+  .progress-bar-sm { @apply w-full h-1.5 rounded-full overflow-hidden; background: rgba(200, 192, 175, 0.06); }
+
+  /* ═══════════ VIEW SWITCHER ═══════════ */
   .view-tab {
     @apply px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer;
     color: rgba(200, 192, 175, 0.4);
   }
-  .view-tab:hover {
-    color: rgba(200, 192, 175, 0.7);
-    background: rgba(200, 192, 175, 0.04);
-  }
-  .view-tab-active {
-    color: #e8ecf4;
-    background: rgba(200, 192, 175, 0.08);
+  .view-tab:hover { color: rgba(200, 192, 175, 0.7); background: rgba(200, 192, 175, 0.04); }
+  .view-tab-active { color: #e8ecf4; background: rgba(200, 192, 175, 0.08); }
+
+  /* ═══════════ TOUCH DEVICE IMPROVEMENTS ═══════════ */
+  @media (pointer: coarse) {
+    .select-dark { min-height: 40px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
   }
 
-  /* === LANDSCAPE RESPONSIVE === */
+  /* ═══════════ LANDSCAPE ═══════════ */
   @media (orientation: landscape) and (max-height: 500px) {
     .landscape-grid { @apply grid-cols-2 gap-3; }
     .landscape-compact { @apply py-1 px-2; }
@@ -158,49 +152,30 @@
   }
 }
 
-/* === ANIMATIONS === */
+/* ═══════════ ANIMATIONS ═══════════ */
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn {
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes pulse-glow { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
 .animate-slide-up { animation: slideUp 0.3s ease-out; }
 .animate-fade-in { animation: fadeIn 0.2s ease-out; }
 .animate-scale-in { animation: scaleIn 0.2s ease-out; }
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, rgba(200, 192, 175, 0.05), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  background-size: 200% 100%; animation: shimmer 2s infinite;
 }
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 .animate-float { animation: float 6s ease-in-out infinite; }
 
-/* === SVG RING CHART === */
-.ring-chart {
-  transform: rotate(-90deg);
-}
-.ring-chart circle {
-  fill: none;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1s ease-out;
-}
+/* ═══════════ SVG RING CHART ═══════════ */
+.ring-chart { transform: rotate(-90deg); }
+.ring-chart circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
