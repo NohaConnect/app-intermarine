@@ -33,10 +33,10 @@ function ThemeToggle({ themePref, onCycle }) {
   const label = themePref === 'light' ? 'Claro' : themePref === 'dark' ? 'Escuro' : 'Sistema'
   return (
     <button onClick={onCycle}
-      className="p-1.5 sm:p-2 rounded-lg transition-all active:scale-95 group relative"
-      style={{ color: 'rgba(200,192,175,0.4)' }}
+      className="theme-toggle-btn p-1.5 sm:p-2 rounded-lg transition-all active:scale-95 group relative flex items-center gap-1.5"
       title={`Tema: ${label}`}>
       <Icon size={16} className="transition-transform group-active:rotate-45" />
+      <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-wider">{label}</span>
     </button>
   )
 }

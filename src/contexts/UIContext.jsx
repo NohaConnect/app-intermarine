@@ -7,7 +7,7 @@ function getSystemTheme() {
 }
 
 function getSavedTheme() {
-  try { return localStorage.getItem('noha-theme') || 'system' } catch { return 'system' }
+  try { return localStorage.getItem('noha-theme') || 'dark' } catch { return 'dark' }
 }
 
 function resolveTheme(pref) {

@@ -130,47 +130,89 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.12);
   }
 
-  /* Light text overrides — Tailwind classes */
+  /* ═══════════ THEME TOGGLE BUTTON ═══════════ */
+  .theme-toggle-btn {
+    color: rgba(200,192,175,0.6);
+    border: 1px solid rgba(200,192,175,0.12);
+    background: rgba(200,192,175,0.05);
+  }
+  .theme-toggle-btn:hover {
+    color: #c8c0af;
+    background: rgba(200,192,175,0.1);
+    border-color: rgba(200,192,175,0.2);
+  }
+  .theme-light .theme-toggle-btn {
+    color: rgba(40,36,28,0.6) !important;
+    border-color: rgba(40,36,28,0.12) !important;
+    background: rgba(40,36,28,0.05) !important;
+  }
+  .theme-light .theme-toggle-btn:hover {
+    color: #1a1d24 !important;
+    background: rgba(40,36,28,0.1) !important;
+    border-color: rgba(40,36,28,0.2) !important;
+  }
+
+  /* ═══════════ LIGHT TEXT OVERRIDES ═══════════ */
+
+  /* Tailwind utility classes */
   .theme-light .text-white { color: #1a1d24 !important; }
-  .theme-light .text-white\/90 { color: #1a1d24 !important; }
-  .theme-light .text-white\/70 { color: rgba(40,36,28,0.7) !important; }
+  .theme-light .text-white\/90 { color: #2a2520 !important; }
+  .theme-light .text-white\/70 { color: rgba(40,36,28,0.75) !important; }
 
   /*
-   * Light theme: override ALL hardcoded inline rgba(200,192,175,...) text colors.
-   * We do this by setting color on common elements within .theme-light
-   * since inline styles beat class selectors.
-   * Strategy: use [style] attribute selectors + !important for key containers.
+   * Light theme: override ALL hardcoded inline colors for dark mode.
+   * Attribute selectors match substrings in the style attribute.
+   * Both spaced and unspaced rgba formats are covered.
    */
-  .theme-light [style*="color: rgba(200"] { color: rgba(40,36,28,0.55) !important; }
-  .theme-light [style*="color: #c8c0af"] { color: #5a544a !important; }
+
+  /* Gold/beige text → dark brown for light backgrounds */
+  .theme-light [style*="color: #c8c0af"] { color: #3d3830 !important; }
   .theme-light [style*="color: #e8ecf4"] { color: #1a1d24 !important; }
-  .theme-light [style*="color: rgba(200, 192, 175, 0.3)"] { color: rgba(40,36,28,0.45) !important; }
-  .theme-light [style*="color: rgba(200, 192, 175, 0.4)"] { color: rgba(40,36,28,0.5) !important; }
-  .theme-light [style*="color: rgba(200, 192, 175, 0.5)"] { color: rgba(40,36,28,0.6) !important; }
-  .theme-light [style*="color: rgba(200, 192, 175, 0.7)"] { color: rgba(40,36,28,0.75) !important; }
-  .theme-light [style*="color: rgba(200,192,175,0.2)"] { color: rgba(40,36,28,0.3) !important; }
-  .theme-light [style*="color: rgba(200,192,175,0.25)"] { color: rgba(40,36,28,0.35) !important; }
-  .theme-light [style*="color: rgba(200,192,175,0.3)"] { color: rgba(40,36,28,0.45) !important; }
-  .theme-light [style*="color: rgba(200,192,175,0.4)"] { color: rgba(40,36,28,0.5) !important; }
-  .theme-light [style*="color: rgba(200,192,175,0.5)"] { color: rgba(40,36,28,0.6) !important; }
   .theme-light [style*="color: white"] { color: #1a1d24 !important; }
   .theme-light .font-black.text-white { color: #1a1d24 !important; }
 
-  /* Backgrounds that are too dark for light mode */
-  .theme-light [style*="background: rgba(10,14,26"] { background: rgba(250,248,245,0.9) !important; }
-  .theme-light [style*="background: rgba(10, 14, 26"] { background: rgba(250,248,245,0.9) !important; }
+  /* Catch-all: any inline rgba(200,...) text → dark equivalent */
+  .theme-light [style*="color: rgba(200"] { color: rgba(40,36,28,0.65) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.7)"] { color: rgba(26,29,36,0.8) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.5)"] { color: rgba(26,29,36,0.65) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.4)"] { color: rgba(26,29,36,0.6) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.3)"] { color: rgba(26,29,36,0.5) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.7)"] { color: rgba(26,29,36,0.8) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.5)"] { color: rgba(26,29,36,0.65) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.4)"] { color: rgba(26,29,36,0.6) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.3)"] { color: rgba(26,29,36,0.5) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.25)"] { color: rgba(26,29,36,0.45) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.2)"] { color: rgba(26,29,36,0.4) !important; }
+
+  /* ═══════════ LIGHT BACKGROUND OVERRIDES ═══════════ */
+
+  /* Dark navy backgrounds → light cream */
+  .theme-light [style*="background: rgba(10,14,26"] { background: rgba(240,237,232,0.85) !important; }
+  .theme-light [style*="background: rgba(10, 14, 26"] { background: rgba(240,237,232,0.85) !important; }
   .theme-light [style*="background: rgba(4,6,14"] { background: rgba(0,0,0,0.4) !important; }
   .theme-light [style*="background: rgba(20, 23, 32"] { background: rgba(255,255,255,0.95) !important; }
-  .theme-light [style*="background: rgba(200,192,175,0.03)"] { background: rgba(40,36,28,0.03) !important; }
-  .theme-light [style*="background: rgba(200, 192, 175, 0.03)"] { background: rgba(40,36,28,0.03) !important; }
-  .theme-light [style*="background: rgba(200, 192, 175, 0.04)"] { background: rgba(40,36,28,0.04) !important; }
-  .theme-light [style*="background: rgba(200, 192, 175, 0.06)"] { background: rgba(40,36,28,0.04) !important; }
-  .theme-light [style*="background: rgba(200,192,175,0.06)"] { background: rgba(40,36,28,0.04) !important; }
-  .theme-light [style*="background: rgba(200, 192, 175, 0.08)"] { background: rgba(40,36,28,0.05) !important; }
+  .theme-light [style*="background: rgba(20,23,32"] { background: rgba(255,255,255,0.95) !important; }
 
-  /* Borders */
-  .theme-light [style*="border"] [style*="rgba(200,192,175"] { border-color: rgba(40,36,28,0.08) !important; }
-  .theme-light [style*="borderBottom"] [style*="rgba(200,192,175"] { border-color: rgba(40,36,28,0.06) !important; }
+  /* Subtle gold backgrounds → subtle dark */
+  .theme-light [style*="background: rgba(200,192,175,0.0"] { background: rgba(40,36,28,0.03) !important; }
+  .theme-light [style*="background: rgba(200, 192, 175, 0.0"] { background: rgba(40,36,28,0.03) !important; }
+  .theme-light [style*="background: rgba(200,192,175,0.1"] { background: rgba(40,36,28,0.06) !important; }
+  .theme-light [style*="background: rgba(200, 192, 175, 0.1"] { background: rgba(40,36,28,0.06) !important; }
+
+  /* Linear gradients used in backgrounds */
+  .theme-light [style*="linear-gradient"][style*="rgba(200,192,175"] {
+    background: rgba(40,36,28,0.04) !important;
+  }
+
+  /* Border overrides */
+  .theme-light [style*="borderBottom"][style*="rgba(200,192,175"] { border-bottom-color: rgba(40,36,28,0.08) !important; }
+  .theme-light [style*="borderBottomColor: rgba(200"] { border-bottom-color: rgba(40,36,28,0.08) !important; }
+  .theme-light [style*="border: 1px solid rgba(200"] { border-color: rgba(40,36,28,0.08) !important; }
+  .theme-light [style*="border: 1px dashed rgba(200"] { border-color: rgba(40,36,28,0.15) !important; }
+
+  /* Spinner borders */
+  .theme-light [style*="borderColor: rgba(200,192,175"] { border-color: rgba(40,36,28,0.15) !important; }
+  .theme-light [style*="borderTopColor: #c8c0af"] { border-top-color: #3d3830 !important; }
 
   /* Logo filter for light mode */
   .theme-light [style*="filter: invert(1)"] { filter: none !important; }
