@@ -24,9 +24,9 @@ const NOHA_TEAM = [
 
 function isNohaTeamTask(donoStr) {
   if (!donoStr) return false
-  const donos = splitDonos(donoStr).map(d => d.toLowerCase().replace(/:$/, ''))
-  // If any dono matches a Noha team member, include the task
-  return donos.some(d => NOHA_TEAM.some(member => d === member || d.includes('noha')))
+  const lower = donoStr.toLowerCase().replace(/:$/g, '').trim()
+  // Check if the full dono string contains any Noha team member name
+  return NOHA_TEAM.some(member => lower.includes(member))
 }
 
 /**

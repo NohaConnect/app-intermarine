@@ -130,10 +130,51 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.12);
   }
 
-  /* Light text overrides for common inline styles */
-  .theme-light .text-white { color: var(--text-primary) !important; }
-  .theme-light .text-white\/90 { color: var(--text-primary) !important; }
-  .theme-light .text-white\/70 { color: var(--text-secondary) !important; }
+  /* Light text overrides — Tailwind classes */
+  .theme-light .text-white { color: #1a1d24 !important; }
+  .theme-light .text-white\/90 { color: #1a1d24 !important; }
+  .theme-light .text-white\/70 { color: rgba(40,36,28,0.7) !important; }
+
+  /*
+   * Light theme: override ALL hardcoded inline rgba(200,192,175,...) text colors.
+   * We do this by setting color on common elements within .theme-light
+   * since inline styles beat class selectors.
+   * Strategy: use [style] attribute selectors + !important for key containers.
+   */
+  .theme-light [style*="color: rgba(200"] { color: rgba(40,36,28,0.55) !important; }
+  .theme-light [style*="color: #c8c0af"] { color: #5a544a !important; }
+  .theme-light [style*="color: #e8ecf4"] { color: #1a1d24 !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.3)"] { color: rgba(40,36,28,0.45) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.4)"] { color: rgba(40,36,28,0.5) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.5)"] { color: rgba(40,36,28,0.6) !important; }
+  .theme-light [style*="color: rgba(200, 192, 175, 0.7)"] { color: rgba(40,36,28,0.75) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.2)"] { color: rgba(40,36,28,0.3) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.25)"] { color: rgba(40,36,28,0.35) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.3)"] { color: rgba(40,36,28,0.45) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.4)"] { color: rgba(40,36,28,0.5) !important; }
+  .theme-light [style*="color: rgba(200,192,175,0.5)"] { color: rgba(40,36,28,0.6) !important; }
+  .theme-light [style*="color: white"] { color: #1a1d24 !important; }
+  .theme-light .font-black.text-white { color: #1a1d24 !important; }
+
+  /* Backgrounds that are too dark for light mode */
+  .theme-light [style*="background: rgba(10,14,26"] { background: rgba(250,248,245,0.9) !important; }
+  .theme-light [style*="background: rgba(10, 14, 26"] { background: rgba(250,248,245,0.9) !important; }
+  .theme-light [style*="background: rgba(4,6,14"] { background: rgba(0,0,0,0.4) !important; }
+  .theme-light [style*="background: rgba(20, 23, 32"] { background: rgba(255,255,255,0.95) !important; }
+  .theme-light [style*="background: rgba(200,192,175,0.03)"] { background: rgba(40,36,28,0.03) !important; }
+  .theme-light [style*="background: rgba(200, 192, 175, 0.03)"] { background: rgba(40,36,28,0.03) !important; }
+  .theme-light [style*="background: rgba(200, 192, 175, 0.04)"] { background: rgba(40,36,28,0.04) !important; }
+  .theme-light [style*="background: rgba(200, 192, 175, 0.06)"] { background: rgba(40,36,28,0.04) !important; }
+  .theme-light [style*="background: rgba(200,192,175,0.06)"] { background: rgba(40,36,28,0.04) !important; }
+  .theme-light [style*="background: rgba(200, 192, 175, 0.08)"] { background: rgba(40,36,28,0.05) !important; }
+
+  /* Borders */
+  .theme-light [style*="border"] [style*="rgba(200,192,175"] { border-color: rgba(40,36,28,0.08) !important; }
+  .theme-light [style*="borderBottom"] [style*="rgba(200,192,175"] { border-color: rgba(40,36,28,0.06) !important; }
+
+  /* Logo filter for light mode */
+  .theme-light [style*="filter: invert(1)"] { filter: none !important; }
+  .theme-light img[src*="noha-logo"] { filter: none !important; }
 
   /* ═══════════ BUTTONS ═══════════ */
   .btn-primary {
