@@ -154,10 +154,10 @@ const KanbanBoard = memo(function KanbanBoard({
     setActiveId(null)
     if (!over) return
 
-    const itemId = parseInt(active.id)
+    const itemId = active.id
     // over.id is "column-{groupName}"
     const targetGroup = over.id.replace('column-', '')
-    const item = items.find(i => i.id === itemId)
+    const item = items.find(i => i.id.toString() === itemId)
     if (!item) return
 
     const currentGroup = getGroupKey(item)
