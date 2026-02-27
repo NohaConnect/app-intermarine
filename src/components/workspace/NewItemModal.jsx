@@ -19,9 +19,9 @@ const NewItemModal = memo(function NewItemModal({
     titulo: '',
     frente: frenteNames[0] || '',
     descricao: '',
-    prioridade: config.default_priority || 'Média',
+    prioridade: config.defaultPriority || 'Média',
     dono: donoNames[0] || '',
-    status: config.default_status || 'Pendente',
+    status: config.defaultStatus || 'Pendente',
     deadline: null,
     progresso: 0,
   })
@@ -44,7 +44,7 @@ const NewItemModal = memo(function NewItemModal({
         onClick={e => e.stopPropagation()}>
 
         <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">Nov{config.item_label === 'Ação' ? 'a Ação' : 'a Tarefa'}</h2>
+          <h2 className="text-lg font-bold text-white">Nov{config.itemLabel === 'Ação' ? 'a Ação' : 'a Tarefa'}</h2>
           <button onClick={onClose} className="text-xl p-1 -m-1" style={{ color: 'rgba(200,192,175,0.3)' }}>×</button>
         </div>
 
@@ -68,8 +68,8 @@ const NewItemModal = memo(function NewItemModal({
                 onChange={v => set('frente', v)}
                 frenteNames={frenteNames}
                 onAddFrente={onAddFrente}
-                accent={config.accent_color}
-                accentRgb={config.accent_rgb}
+                accent={config.accent}
+                accentRgb={config.accentRgb}
                 className="input-dark" />
             </div>
             <div>
@@ -86,8 +86,8 @@ const NewItemModal = memo(function NewItemModal({
                 onChange={v => set('dono', v)}
                 donoNames={donoNames}
                 onAddDono={onAddDono}
-                accent={config.accent_color}
-                accentRgb={config.accent_rgb}
+                accent={config.accent}
+                accentRgb={config.accentRgb}
                 className="input-dark text-base" />
             </div>
             <div>
@@ -97,8 +97,8 @@ const NewItemModal = memo(function NewItemModal({
           </div>
           <button onClick={handleCreate}
             className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-95"
-            style={{ background: `linear-gradient(135deg, ${config.accent_color} 0%, ${config.accent_color}dd 100%)`, boxShadow: `0 4px 24px rgba(${config.accent_rgb},0.2)` }}>
-            Criar {config.item_label}
+            style={{ background: `linear-gradient(135deg, ${config.accent} 0%, ${config.accent}dd 100%)`, boxShadow: `0 4px 24px rgba(${config.accentRgb},0.2)` }}>
+            Criar {config.itemLabel}
           </button>
         </div>
       </div>

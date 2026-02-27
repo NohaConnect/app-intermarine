@@ -34,14 +34,14 @@ const DetailModal = memo(function DetailModal({
   }
 
   const handleDelete = () => {
-    if (confirm(`Excluir ${config.item_label.toLowerCase()}?`)) {
+    if (confirm(`Excluir ${config.itemLabel.toLowerCase()}?`)) {
       onDelete(item.id)
     }
   }
 
   const statuses = config.statuses || []
   const priorities = config.priorities || []
-  const statusColors = config.status_colors || {}
+  const statusColors = config.statusColors || {}
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
@@ -56,7 +56,7 @@ const DetailModal = memo(function DetailModal({
           <div>
             <h2 className="text-lg font-black text-white pr-4">{title}</h2>
             {workspaceName && (
-              <span className="text-xs font-medium" style={{ color: config.accent_color }}>{workspaceName}</span>
+              <span className="text-xs font-medium" style={{ color: config.accent }}>{workspaceName}</span>
             )}
           </div>
           <button onClick={onClose}
@@ -89,8 +89,8 @@ const DetailModal = memo(function DetailModal({
               onChange={v => onUpdate(item.id, { frente: v })}
               frenteNames={frenteNames}
               onAddFrente={onAddFrente}
-              accent={config.accent_color}
-              accentRgb={config.accent_rgb} />
+              accent={config.accent}
+              accentRgb={config.accentRgb} />
           </div>
           <div>
             <label className="label">Dono</label>
@@ -98,8 +98,8 @@ const DetailModal = memo(function DetailModal({
               onChange={v => onUpdate(item.id, { dono: v })}
               donoNames={donoNames || []}
               onAddDono={onAddDono}
-              accent={config.accent_color}
-              accentRgb={config.accent_rgb} />
+              accent={config.accent}
+              accentRgb={config.accentRgb} />
           </div>
           <div>
             <label className="label">Prazo</label>
@@ -111,7 +111,7 @@ const DetailModal = memo(function DetailModal({
             <div className="flex items-center gap-2">
               <input type="range" min="0" max="100" step="5" value={item.progresso || 0}
                 onChange={e => onUpdate(item.id, { progresso: parseInt(e.target.value) })} className="flex-1" />
-              <span className="text-sm font-bold w-8 text-right" style={{ color: config.accent_color }}>{item.progresso || 0}%</span>
+              <span className="text-sm font-bold w-8 text-right" style={{ color: config.accent }}>{item.progresso || 0}%</span>
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ const DetailModal = memo(function DetailModal({
           <div className="space-y-2 max-h-40 overflow-y-auto mb-3">
             {comments.map(c => (
               <div key={c.id} className="text-sm p-2 rounded-lg"
-                style={{ background: c.auto ? `rgba(${config.accent_rgb},0.06)` : 'rgba(200,192,175,0.03)' }}>
+                style={{ background: c.auto ? `rgba(${config.accentRgb},0.06)` : 'rgba(200,192,175,0.03)' }}>
                 <div className="text-white/70">{c.texto}</div>
                 <div className="text-xs mt-0.5" style={{ color: 'rgba(200,192,175,0.3)' }}>
                   {c.autor && `${c.autor} · `}
@@ -143,7 +143,7 @@ const DetailModal = memo(function DetailModal({
               placeholder="Adicionar comentário..." className="input-dark text-sm flex-1" />
             <button onClick={handleSubmitComment}
               className="px-3 py-2 rounded-xl text-sm font-bold transition-all active:scale-95"
-              style={{ background: `rgba(${config.accent_rgb},0.12)`, color: config.accent_color }}>
+              style={{ background: `rgba(${config.accentRgb},0.12)`, color: config.accent }}>
               Enviar
             </button>
           </div>
@@ -154,7 +154,7 @@ const DetailModal = memo(function DetailModal({
           style={{ color: 'rgba(231,76,94,0.5)' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(231,76,94,0.08)'; e.currentTarget.style.color = '#e74c5e' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(231,76,94,0.5)' }}>
-          <Trash2 size={14} /> Excluir {config.item_label.toLowerCase()}
+          <Trash2 size={14} /> Excluir {config.itemLabel.toLowerCase()}
         </button>
       </div>
     </div>

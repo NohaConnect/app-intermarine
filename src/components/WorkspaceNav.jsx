@@ -40,7 +40,7 @@ const WorkspaceNav = memo(function WorkspaceNav({
 
   const tabs = [
     // Noha global dashboard always first
-    { id: 'noha', label: 'Noha', labelFull: 'Noha', icon: BarChart3, color: '#c8c0af' },
+    { id: 'noha', label: 'Gestão', labelFull: 'Noha | Gestão', icon: BarChart3, color: '#c8c0af' },
     // Dynamic client workspaces
     ...parents.map(p => ({
       id: p.id,

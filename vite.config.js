@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
-        name: 'Intermarine & Noha',
-        short_name: 'Intermarine & Noha',
-        description: 'Gestao Operacional - Plano de Acao Intermarine & Tarefas Noha',
+        name: 'Noha Management',
+        short_name: 'Noha Management',
+        description: 'Noha Management — Plataforma de gestão multi-cliente',
         theme_color: '#0f1729',
         background_color: '#0f1729',
         display: 'standalone',

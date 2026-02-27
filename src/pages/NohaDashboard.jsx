@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { useAllTasks } from '../hooks/useTasks'
+import { useFrentesForWorkspace } from '../hooks/useFrentes'
+import { useDonos } from '../hooks/useDonos'
 import { useAuth } from '../contexts/AuthContext'
 import { useUI } from '../contexts/UIContext'
 import { useResponsive } from '../hooks/useSupabase'
@@ -14,9 +16,23 @@ import { StatusBadge, FrenteBadge } from '../components/ui/Badges'
 
 import { BarChart3, CheckCircle2, Zap, AlertTriangle, Target, Clock, Briefcase } from 'lucide-react'
 
+// ─── Noha team members (case-insensitive match) ─────
+const NOHA_TEAM = [
+  'rodrigo', 'noha', 'fernando', 'vitor', 'vitor serrano',
+  'rodrigo landin', 'renata', 'renata tiemi',
+]
+
+function isNohaTeamTask(donoStr) {
+  if (!donoStr) return false
+  const donos = splitDonos(donoStr).map(d => d.toLowerCase().replace(/:$/, ''))
+  // If any dono matches a Noha team member, include the task
+  return donos.some(d => NOHA_TEAM.some(member => d === member || d.includes('noha')))
+}
+
 /**
- * NohaDashboard — aggregated view of ALL tasks from ALL workspaces.
- * Provides Dashboard, Kanban, and Lista views with workspace filter.
+ * NohaDashboard — aggregated view of Noha team tasks across ALL workspaces.
+ * Filters to show only tasks owned by the Noha team.
+ * Provides Dashboard, Kanban, and Lista views with workspace + sub-workspace filter.
  */
 export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
   const { profile } = useAuth()
@@ -25,13 +41,9 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
 
   // Get all non-parent workspace IDs (sub-workspaces + standalone workspaces)
   const leafWorkspaces = useMemo(() => {
-    const parents = new Set(workspaces.filter(w => !w.parent_id).map(w => w.id))
-    // Include workspaces that have no children (leaf nodes)
     const hasChildren = new Set(workspaces.filter(w => w.parent_id).map(w => w.parent_id))
     return workspaces.filter(w => {
-      // If it's a sub-workspace, include it
       if (w.parent_id) return true
-      // If it's a top-level workspace WITHOUT children, include it
       if (!hasChildren.has(w.id)) return true
       return false
     })
@@ -40,10 +52,14 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
   const leafIds = useMemo(() => leafWorkspaces.map(w => w.id), [leafWorkspaces])
   const wsMap = useMemo(() => Object.fromEntries(workspaces.map(w => [w.id, w])), [workspaces])
 
-  const { tasks, loading, updateTask, addComment, deleteTask } = useAllTasks(leafIds)
+  const { tasks: allTasks, loading, updateTask, addComment, deleteTask } = useAllTasks(leafIds)
+
+  // ─── Pre-filter: only Noha team tasks ──────────
+  const nohaTeamTasks = useMemo(() => allTasks.filter(isNohaTeamTask), [allTasks])
 
   // ─── Filters ─────────────────────────────────
   const [wsFilter, setWsFilter] = useState('Todos')
+  const [subWsFilter, setSubWsFilter] = useState('Todos')
   const [filters, setFiltersState] = useState({ frente: 'Todas', prioridade: 'Todas', dono: 'Todos' })
   const setFilter = useCallback((key, val) => setFiltersState(prev => ({ ...prev, [key]: val })), [])
 
@@ -58,31 +74,42 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
     return ws.name
   }, [wsMap])
 
+  // Sub-workspaces for the selected parent filter
+  const subWorkspacesForFilter = useMemo(() => {
+    if (wsFilter === 'Todos') return []
+    return workspaces.filter(w => w.parent_id === wsFilter).sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+  }, [wsFilter, workspaces])
+
   // ─── Derived Data ──────────────────────────────
-  const filtered = useMemo(() => tasks.filter(t => {
+  const filtered = useMemo(() => nohaTeamTasks.filter(t => {
     if (wsFilter !== 'Todos') {
-      // wsFilter can be a parent ID or a leaf workspace ID
       const ws = wsMap[t.workspace_id]
       if (!ws) return false
-      if (t.workspace_id !== wsFilter && ws.parent_id !== wsFilter) return false
+      // Check sub-workspace filter first
+      if (subWsFilter !== 'Todos') {
+        if (t.workspace_id !== subWsFilter) return false
+      } else {
+        // Check parent filter
+        if (t.workspace_id !== wsFilter && ws.parent_id !== wsFilter) return false
+      }
     }
     if (filters.frente !== 'Todas' && t.frente !== filters.frente) return false
     if (filters.dono !== 'Todos' && !splitDonos(t.dono).includes(filters.dono)) return false
     if (filters.prioridade !== 'Todas' && t.prioridade !== filters.prioridade) return false
     return true
-  }), [tasks, wsFilter, filters, wsMap])
+  }), [nohaTeamTasks, wsFilter, subWsFilter, filters, wsMap])
 
   const allDonos = useMemo(() => {
     const s = new Set()
-    tasks.forEach(t => splitDonos(t.dono).forEach(d => { if (d) s.add(d) }))
+    nohaTeamTasks.forEach(t => splitDonos(t.dono).forEach(d => { if (d) s.add(d) }))
     return Array.from(s).sort()
-  }, [tasks])
+  }, [nohaTeamTasks])
 
   const allFrentes = useMemo(() => {
     const s = new Set()
-    tasks.forEach(t => { if (t.frente) s.add(t.frente) })
+    nohaTeamTasks.forEach(t => { if (t.frente) s.add(t.frente) })
     return Array.from(s).sort()
-  }, [tasks])
+  }, [nohaTeamTasks])
 
   // Stats
   const stats = useMemo(() => {
@@ -112,19 +139,19 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
     return map
   }, [filtered])
 
-  // ─── Handlers ──────────────────────────────────
+  // ─── Modal state ────────────────────────────────
   const [modalId, setModalId] = useState(null)
-  const modalItem = modalId ? tasks.find(t => t.id === modalId) : null
+  const modalItem = modalId ? allTasks.find(t => t.id === modalId) : null
   const modalConfig = modalItem ? normalizeConfig(wsMap[modalItem.workspace_id]) : null
 
   const handleUpdate = useCallback(async (id, fields) => {
-    const task = tasks.find(t => t.id === id)
+    const task = allTasks.find(t => t.id === id)
     if (fields.status && fields.status !== task?.status) {
       await addComment(id, `⚡ ${task.status} → ${fields.status}`, profile?.name || 'Sistema', true)
       addToast(`Status: ${fields.status}`)
     }
     await updateTask(id, fields)
-  }, [tasks, addComment, updateTask, profile, addToast])
+  }, [allTasks, addComment, updateTask, profile, addToast])
 
   const handleDelete = useCallback(async (id) => {
     await deleteTask(id)
@@ -134,6 +161,12 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
 
   // ─── Workspace filter options ──────────────────
   const parentWorkspaces = useMemo(() => workspaces.filter(w => !w.parent_id), [workspaces])
+
+  // Handle parent workspace filter change
+  const handleWsFilterChange = useCallback((val) => {
+    setWsFilter(val)
+    setSubWsFilter('Todos') // reset sub when parent changes
+  }, [])
 
   // Loading
   if (loading) {
@@ -152,7 +185,7 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
       {/* Detail Modal */}
       {modalItem && modalConfig && (
         <DetailModal item={modalItem} config={modalConfig}
-          frenteNames={[]} donoNames={allDonos}
+          frenteNames={allFrentes} donoNames={allDonos}
           onUpdate={handleUpdate} onDelete={handleDelete} onAddComment={addComment}
           onClose={() => setModalId(null)} profileName={profile?.name}
           workspaceName={wsDisplayName(modalItem.workspace_id)} />
@@ -165,10 +198,10 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
           <div>
             <div className="text-sm font-bold tracking-widest uppercase flex items-center gap-2"
               style={{ color: '#c8c0af' }}>
-              <BarChart3 size={16} /> Noha — Gestão Geral
+              <BarChart3 size={16} /> Noha | Gestão
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'rgba(200,192,175,0.3)' }}>
-              {stats.total} tarefas em {leafWorkspaces.length} workspaces
+              {stats.total} tarefas em {Object.keys(byWorkspace).length} workspaces
             </div>
           </div>
         </div>
@@ -181,12 +214,21 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
             style={{ color: 'rgba(200,192,175,0.3)' }}>
             <Briefcase size={11} /> Cliente
           </span>
-          <select value={wsFilter} onChange={e => setWsFilter(e.target.value)} className="select-dark">
+          <select value={wsFilter} onChange={e => handleWsFilterChange(e.target.value)} className="select-dark">
             <option value="Todos">Todos</option>
             {parentWorkspaces.map(p => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+          {/* Sub-workspace filter — only shows when a parent with children is selected */}
+          {subWorkspacesForFilter.length > 0 && (
+            <select value={subWsFilter} onChange={e => setSubWsFilter(e.target.value)} className="select-dark">
+              <option value="Todos">Todas áreas</option>
+              {subWorkspacesForFilter.map(sw => (
+                <option key={sw.id} value={sw.id}>{sw.name}</option>
+              ))}
+            </select>
+          )}
           <select value={filters.frente} onChange={e => setFilter('frente', e.target.value)} className="select-dark">
             <option>Todas</option>
             {allFrentes.map(f => <option key={f}>{f}</option>)}
@@ -277,7 +319,7 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
         {view === 'kanban' && (
           <div className="space-y-2">
             <p className="text-xs mb-4" style={{ color: 'rgba(200,192,175,0.4)' }}>
-              Visão global por status de todos os workspaces
+              Visão global por status — tarefas da equipe Noha
             </p>
             <div className="flex gap-3 overflow-x-auto pb-4">
               {['Pendente', 'Em Andamento', 'Finalizado', 'Em Espera', 'Não Iniciado', 'A Fazer', 'Em Progresso', 'Em Revisão', 'Concluído', 'Pausado'].map(status => {
