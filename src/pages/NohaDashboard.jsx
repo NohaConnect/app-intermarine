@@ -22,9 +22,11 @@ const NOHA_TEAM = [
   'rodrigo landin', 'renata', 'renata tiemi',
 ]
 
-function isNohaTeamTask(donoStr) {
+function isNohaTeamTask(task) {
+  const donoStr = task?.dono
   if (!donoStr) return false
-  const lower = donoStr.toLowerCase().replace(/:$/g, '').trim()
+  const str = typeof donoStr === 'string' ? donoStr : String(donoStr)
+  const lower = str.toLowerCase().replace(/:$/g, '').trim()
   // Check if the full dono string contains any Noha team member name
   return NOHA_TEAM.some(member => lower.includes(member))
 }
