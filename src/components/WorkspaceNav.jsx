@@ -69,7 +69,7 @@ const WorkspaceNav = memo(function WorkspaceNav({
   ]
 
   return (
-    <nav className="glass-nav sticky top-0 z-50 px-2 sm:px-4"
+    <nav className="glass-nav sticky top-0 z-50 px-2 sm:px-4 safe-top"
       style={{ borderBottom: '1px solid rgba(200,192,175,0.06)' }}>
       <div className="flex items-center h-14 sm:h-16 gap-1">
         {/* Logo */}
@@ -92,13 +92,10 @@ const WorkspaceNav = memo(function WorkspaceNav({
             const rgb = rgbFromHex(tab.color || '#c8c0af')
             return (
               <button key={tab.id} onClick={() => onSelect(tab.id)}
-                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 active:scale-95"
+                className={`nav-tab flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 active:scale-95 ${isActive ? 'nav-tab-active' : ''}`}
                 style={isActive ? {
                   background: `rgba(${rgb},0.12)`,
-                  color: '#e8ecf4',
-                } : {
-                  color: 'rgba(200,192,175,0.4)',
-                }}>
+                } : {}}>
                 <Icon size={14} style={isActive ? { color: tab.color } : {}} />
                 <span className="hidden xs:inline sm:hidden">{tab.label}</span>
                 <span className="hidden sm:inline">{tab.labelFull}</span>

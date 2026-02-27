@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useUI } from '../contexts/UIContext'
 import { useResponsive } from '../hooks/useSupabase'
 import { normalizeConfig } from '../lib/configAdapter'
-import { splitDonos, isOverdue, daysLeft } from '../lib/constants'
+import { splitDonos, isOverdue, daysLeft, formatDate } from '../lib/constants'
 
 import FilterBar from '../components/workspace/FilterBar'
 import DetailModal from '../components/workspace/DetailModal'
@@ -14,7 +14,7 @@ import RingChart from '../components/ui/RingChart'
 import ProgressBar from '../components/ui/ProgressBar'
 import { StatusBadge, FrenteBadge } from '../components/ui/Badges'
 
-import { BarChart3, CheckCircle2, Zap, AlertTriangle, Target, Clock, Briefcase } from 'lucide-react'
+import { BarChart3, CheckCircle2, Zap, AlertTriangle, Target, Clock, Briefcase, Bell } from 'lucide-react'
 
 // ─── Noha team members (case-insensitive match) ─────
 const NOHA_TEAM = [
@@ -140,6 +140,23 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
     })
     return map
   }, [filtered])
+
+  // ─── Attention tasks: due within 14 days (all workspaces, not done) ───
+  const attentionTasks = useMemo(() => {
+    const now = new Date()
+    const in14 = new Date()
+    in14.setDate(in14.getDate() + 14)
+    return nohaTeamTasks
+      .filter(t => {
+        if (!t.deadline) return false
+        const ws = wsMap[t.workspace_id]
+        if (!ws) return false
+        if (t.status === ws.done_status) return false
+        const d = new Date(t.deadline + 'T23:59:59')
+        return d >= now && d <= in14
+      })
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+  }, [nohaTeamTasks, wsMap])
 
   // ─── Modal state ────────────────────────────────
   const [modalId, setModalId] = useState(null)
@@ -274,6 +291,43 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
               ))}
             </div>
 
+            {/* Atividades para atenção — next 14 days */}
+            {attentionTasks.length > 0 && (
+              <div className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Bell size={15} style={{ color: '#e6a847' }} />
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#e6a847' }}>
+                    Atividades para atenção
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(230,168,71,0.12)', color: '#e6a847' }}>
+                    {attentionTasks.length}
+                  </span>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1">
+                  {attentionTasks.map(t => {
+                    const ws = wsMap[t.workspace_id]
+                    const dl = daysLeft(t.deadline)
+                    const urgent = dl <= 3
+                    return (
+                      <div key={t.id} className="flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
+                        onClick={() => setModalId(t.id)}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(200,192,175,0.03)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ws?.accent_color || '#c8c0af' }} />
+                        <span className="text-xs text-white/80 flex-1 truncate">{t.titulo}</span>
+                        <span className="text-[10px] flex-shrink-0" style={{ color: 'rgba(200,192,175,0.4)' }}>
+                          {t.dono ? splitDonos(t.dono)[0] : '—'}
+                        </span>
+                        <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: urgent ? '#e6a847' : 'rgba(200,192,175,0.3)' }}>
+                          {urgent ? '⚠️ ' : ''}{formatDate(t.deadline)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Per-workspace breakdown */}
             <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
               {Object.entries(byWorkspace).map(([wsId, wsTasks]) => {
@@ -304,8 +358,8 @@ export default function NohaDashboard({ workspaces, view = 'dashboard' }) {
                           <div className="w-1.5 h-1.5 rounded-full" style={{ background: (ws.status_colors || {})[t.status]?.c || ws.accent_color }} />
                           <span className="text-xs text-white/70 flex-1 truncate">{t.titulo}</span>
                           {t.deadline && (
-                            <span className="text-[10px]" style={{ color: isOverdue(t.deadline) ? '#e74c5e' : 'rgba(200,192,175,0.3)' }}>
-                              {daysLeft(t.deadline) < 0 ? `${Math.abs(daysLeft(t.deadline))}d atrás` : `${daysLeft(t.deadline)}d`}
+                            <span className="text-[10px]" style={{ color: isOverdue(t.deadline) ? '#e74c5e' : daysLeft(t.deadline) <= 3 ? '#e6a847' : 'rgba(200,192,175,0.3)' }}>
+                              {daysLeft(t.deadline) >= 0 && daysLeft(t.deadline) <= 3 ? '⚠️ ' : ''}{formatDate(t.deadline)}
                             </span>
                           )}
                         </div>

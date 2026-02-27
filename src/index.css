@@ -152,6 +152,24 @@
     border-color: rgba(40,36,28,0.2) !important;
   }
 
+  /* ═══════════ NAV TABS ═══════════ */
+  .nav-tab {
+    color: rgba(200,192,175,0.4);
+  }
+  .nav-tab-active {
+    color: #e8ecf4;
+  }
+  .theme-light .nav-tab {
+    color: rgba(40,36,28,0.45) !important;
+  }
+  .theme-light .nav-tab-active {
+    color: #1a1d24 !important;
+    background: rgba(40,36,28,0.08) !important;
+  }
+  .theme-light .nav-tab-active svg {
+    filter: brightness(0.85);
+  }
+
   /* ═══════════ LIGHT TEXT OVERRIDES ═══════════ */
 
   /* Tailwind utility classes */
