@@ -65,16 +65,17 @@ export default function Login() {
               border: '1px solid rgba(200, 192, 175, 0.08)',
               boxShadow: '0 8px 40px rgba(0, 0, 0, 0.3)'
             }}>
-            <img src="/icons/original-icon.png" alt="Intermarine" className="w-16 h-16 object-contain"
+            <img src="/icons/noha-logo.svg" alt="Noha" className="w-16 h-16 object-contain"
+              style={{ filter: 'invert(1) brightness(0.8)' }}
               onError={(e) => { e.target.onerror = null; e.target.src = '/icons/icon-96x96.png' }} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#c8c0af' }}>
-            Intermarine
+            Noha
           </h1>
           <div className="flex items-center justify-center gap-3 mt-2">
             <div className="h-px w-8" style={{ background: 'rgba(200, 192, 175, 0.15)' }} />
             <p className="text-xs font-medium tracking-[0.3em] uppercase" style={{ color: 'rgba(200, 192, 175, 0.3)' }}>
-              Desde 1973
+              Management
             </p>
             <div className="h-px w-8" style={{ background: 'rgba(200, 192, 175, 0.15)' }} />
           </div>

@@ -7,7 +7,7 @@ import { LogOut, User, Shield, Anchor, Compass, UserPlus, Check, AlertTriangle }
 export default function Settings() {
   const { user, profile, signOut, createUser } = useAuth()
   const { isMobile, isLandscape } = useResponsive()
-  const isSuperAdmin = profile?.is_superadmin || profile?.email === 'contato@nohaoficial.com.br'
+  const isSuperAdmin = profile?.email === 'contato@nohaoficial.com.br'
 
   const pad = isLandscape ? 'pl-20 pr-4 py-4' : isMobile ? 'px-4 py-4' : 'px-6 py-4'
 

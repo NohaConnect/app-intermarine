@@ -117,6 +117,7 @@ export const DONOS_CASA = ['Rodrigo', 'Equipe Casa']
 // Helper: split donos string
 export function splitDonos(str) {
   if (!str) return []
+  if (typeof str !== 'string') str = String(str)
   return str.split(/[\/,&]+/).map(s => s.trim()).filter(Boolean)
 }
 

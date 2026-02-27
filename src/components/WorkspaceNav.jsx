@@ -1,8 +1,10 @@
 import React, { memo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useUI } from '../contexts/UIContext'
 import {
-  BarChart3, Settings, LogOut, Plus, ChevronDown,
-  Target, Home, Megaphone, Ship, Briefcase
+  BarChart3, Settings, LogOut, Plus,
+  Target, Home, Megaphone, Ship, Briefcase,
+  Sun, Moon, Monitor,
 } from 'lucide-react'
 
 const ICON_MAP = {
@@ -25,9 +27,23 @@ function rgbFromHex(hex) {
   return `${r},${g},${b}`
 }
 
+// ─── Theme Toggle Button ─────────────────────────────
+function ThemeToggle({ themePref, onCycle }) {
+  const Icon = themePref === 'light' ? Sun : themePref === 'dark' ? Moon : Monitor
+  const label = themePref === 'light' ? 'Claro' : themePref === 'dark' ? 'Escuro' : 'Sistema'
+  return (
+    <button onClick={onCycle}
+      className="p-1.5 sm:p-2 rounded-lg transition-all active:scale-95 group relative"
+      style={{ color: 'rgba(200,192,175,0.4)' }}
+      title={`Tema: ${label}`}>
+      <Icon size={16} className="transition-transform group-active:rotate-45" />
+    </button>
+  )
+}
+
 /**
  * WorkspaceNav — dynamic navigation with workspace tabs loaded from DB.
- * Shows: Noha (global) | Client1 | Client2 | ... | + | Config
+ * Shows: Noha (global) | Client1 | Client2 | ... | + | Theme | Config
  */
 const WorkspaceNav = memo(function WorkspaceNav({
   parents,          // top-level workspaces (clients)
@@ -37,6 +53,7 @@ const WorkspaceNav = memo(function WorkspaceNav({
   isSuperAdmin,
 }) {
   const { profile, signOut } = useAuth()
+  const { themePref, cycleTheme } = useUI()
 
   const tabs = [
     // Noha global dashboard always first
@@ -60,8 +77,9 @@ const WorkspaceNav = memo(function WorkspaceNav({
           style={{ borderRight: '1px solid rgba(200,192,175,0.08)' }}>
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center overflow-hidden"
             style={{ background: 'linear-gradient(135deg, rgba(200,192,175,0.08) 0%, rgba(200,192,175,0.02) 100%)', border: '1px solid rgba(200,192,175,0.08)' }}>
-            <img src="/icons/original-icon.png" alt="N" className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
-              onError={(e) => { e.target.onerror = null; e.target.textContent = 'N' }} />
+            <img src="/icons/noha-logo.svg" alt="N" className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+              style={{ filter: 'invert(1) brightness(0.8)' }}
+              onError={(e) => { e.target.onerror = null; e.target.src = '/icons/original-icon.png' }} />
           </div>
           <span className="text-sm sm:text-base font-black tracking-wider text-white hidden sm:block">NOHA</span>
         </div>
@@ -84,7 +102,6 @@ const WorkspaceNav = memo(function WorkspaceNav({
                 <Icon size={14} style={isActive ? { color: tab.color } : {}} />
                 <span className="hidden xs:inline sm:hidden">{tab.label}</span>
                 <span className="hidden sm:inline">{tab.labelFull}</span>
-                {/* Show only icon on very small screens */}
               </button>
             )
           })}
@@ -100,8 +117,10 @@ const WorkspaceNav = memo(function WorkspaceNav({
           )}
         </div>
 
-        {/* Config + Profile */}
+        {/* Theme + Config + Profile */}
         <div className="flex items-center gap-1 sm:gap-2 ml-1 flex-shrink-0">
+          <ThemeToggle themePref={themePref} onCycle={cycleTheme} />
+
           <button onClick={() => onSelect('settings')}
             className="p-1.5 sm:p-2 rounded-lg transition-all active:scale-95"
             style={activeWorkspace === 'settings'

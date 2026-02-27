@@ -89,7 +89,7 @@ function AppContent() {
   const [activeSubWs, setActiveSubWs] = useState(null)
   const [showWizard, setShowWizard] = useState(false)
 
-  const isSuperAdmin = profile?.is_superadmin || profile?.role === 'admin' || profile?.email === 'contato@nohaoficial.com.br'
+  const isSuperAdmin = profile?.email === 'contato@nohaoficial.com.br'
 
   // Get sub-workspaces for active parent
   const subWorkspaces = useMemo(() => {
@@ -149,7 +149,8 @@ function AppContent() {
         <div className="text-center animate-fade-in">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
             style={{ background: 'rgba(200,192,175,0.06)', border: '1px solid rgba(200,192,175,0.08)' }}>
-            <img src="/icons/original-icon.png" alt="Noha" className="w-12 h-12 object-contain"
+            <img src="/icons/noha-logo.svg" alt="Noha" className="w-12 h-12 object-contain"
+              style={{ filter: 'invert(1) brightness(0.8)' }}
               onError={(e) => { e.target.onerror = null; e.target.src = '/icons/icon-96x96.png' }} />
           </div>
           <div className="w-8 h-8 mx-auto border-2 rounded-full animate-spin"
